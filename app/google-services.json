@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "716340448473",
+    "project_id": "agunganamiroh",
+    "storage_bucket": "agunganamiroh.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:716340448473:android:e544f75d638202ea2382c8",
+        "android_client_info": {
+          "package_name": "com.agunganamiroh"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBAtyoijcVUOBevZ5BXbdzn5_xRzmXomoQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
