@@ -1,31 +1,30 @@
 package com.agunganamiroh.data.model
 
-data class Jamaah(
-    val id: String = "",
+import com.google.firebase.firestore.DocumentId
 
+data class Jamaah(
+    @DocumentId
+    val id: String = "",
     val nama: String = "",
     val alamat: String = "",
-    val noHp: String = "",
-
     val gender: String = "",
-    val binBinti: String = "",
-
     val tempatLahir: String = "",
     val tanggalLahir: String = "",
-
-    val noPaspor: String = "",
-
+    val binBinti: String = "",
     val program: String = "",
+    val paketId: String = "",
     val keberangkatan: String = "",
-
+    val hargaPaket: Long = 0,
     val dp: Long = 0,
-
-    val inputBy: String = "",
-
-    val status: String = "pending",
-
+    val noHp: String = "",
+    val noPaspor: String = "",
+    val akte: Boolean = false,
     val ktp: Boolean = false,
     val kk: Boolean = false,
-    val akte: Boolean = false,
-    val meningitis: Boolean = false
+    val paspor: Boolean = false,
+    val meningitis: Boolean = false,
+    val pelunasan: Boolean = false,
+    val status: String = "pending",
+    val requestTambahan: String = "",
+    val input_by: String = ""
 )

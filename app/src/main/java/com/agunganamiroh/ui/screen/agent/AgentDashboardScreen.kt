@@ -1,107 +1,54 @@
 package com.agunganamiroh.ui.screen.agent
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AssignmentInd
-import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.Group
-import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.Logout
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.Payment
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.PersonAdd
-import androidx.compose.material.icons.filled.PointOfSale
-import androidx.compose.material.icons.filled.Receipt
-import androidx.compose.material.icons.filled.Schedule
-import androidx.compose.material.icons.filled.TrendingUp
-import androidx.compose.material.icons.filled.Verified
-import androidx.compose.material3.Badge
-import androidx.compose.material3.BadgedBox
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.automirrored.filled.Chat
+import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.automirrored.filled.ReceiptLong
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.agunganamiroh.R
+import com.agunganamiroh.viewmodel.AuthViewModel
+import com.agunganamiroh.viewmodel.JamaahViewModel
+import com.agunganamiroh.viewmodel.PaketViewModel
 import kotlinx.coroutines.delay
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
@@ -109,1409 +56,695 @@ import java.util.Date
 import java.util.Locale
 
 // ============================================================
-// THEME CONSTANTS - GOLD & WHITE PREMIUM ENTERPRISE THEME
+// ENTERPRISE THEME COLORS
 // ============================================================
-private val GoldPrimary = Color(0xFFD4AF37)
-private val GoldDark = Color(0xFFB8860B)
-private val GoldLight = Color(0xFFF0E68C)
-private val GoldPale = Color(0xFFFFF8E1)
-private val GoldGradientStart = Color(0xFFD4AF37)
-private val GoldGradientMid = Color(0xFFE8C84A)
-private val GoldGradientEnd = Color(0xFFB8860B)
-private val BackgroundWhite = Color(0xFFFFFFFF)
-private val SurfaceWhite = Color(0xFFFDFBF7)
-private val GlassWhite = Color(0xF2FFFFFF)
-private val TextPrimary = Color(0xFF1A1A1A)
-private val TextSecondary = Color(0xFF4A4A4A)
-private val TextMuted = Color(0xFF888888)
-private val SuccessGreen = Color(0xFF2E7D32)
-private val WarningOrange = Color(0xFFED6C02)
-private val ErrorRed = Color(0xFFD32F2F)
-private val InfoBlue = Color(0xFF1565C0)
+private val BrandGold = Color(0xFFC89B3C)
+private val BrandGoldLight = Color(0xFFF7E9B6)
+private val AppBackground = Color(0xFFFAF8F5)
+private val SurfaceWhite = Color(0xFFFFFFFF)
+private val TextPrimary = Color(0xFF1F1F1F)
+private val TextSecondary = Color(0xFF6B7280)
+private val TextMuted = Color(0xFF9CA3AF)
+private val SuccessGreen = Color(0xFF22C55E)
+private val WarningAmber = Color(0xFFF59E0B)
+private val ErrorRed = Color(0xFFEF4444)
+private val InfoBlue = Color(0xFF3B82F6)
 
 // ============================================================
-// DUMMY DATA MODELS (Siap diganti dengan Firestore)
+// UI MODELS
 // ============================================================
 data class StatItem(
     val label: String,
     val value: String,
     val icon: ImageVector,
-    val tint: Color,
-    val bgTint: Color
+    val color: Color,
+    val growth: String = "+0%"
 )
 
 data class MenuItem(
     val title: String,
+    val subtitle: String,
     val icon: ImageVector,
     val route: String,
-    val description: String,
     val badge: Int = 0
 )
 
-data class PaketUmroh(
-    val id: String,
-    val nama: String,
-    val tanggal: String,
-    val harga: Long,
-    val sisaSeat: Int,
-    val totalSeat: Int,
-    val imageRes: Int = R.drawable.background_das
-)
-
-data class Aktivitas(
-    val id: String,
+data class QuickAction(
     val title: String,
     val subtitle: String,
-    val time: String,
     val icon: ImageVector,
-    val iconBg: Color,
-    val iconTint: Color
+    val route: String
 )
 
 // ============================================================
 // MAIN SCREEN
 // ============================================================
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AgentDashboardScreen(
     navController: NavController,
-    agentName: String = "Ahmad Fauzi",
-    agentEmail: String = "agent@agung-anamiroh.com"
+    authViewModel: AuthViewModel = viewModel(),
+    paketViewModel: PaketViewModel = viewModel(),
+    jamaahViewModel: JamaahViewModel = viewModel()
 ) {
-    val currentDate = remember {
-        SimpleDateFormat("EEEE, dd MMMM yyyy", Locale("id", "ID")).format(Date())
+    val authState by authViewModel.uiState.collectAsStateWithLifecycle()
+    val paketState by paketViewModel.uiState.collectAsStateWithLifecycle()
+    val jamaahState by jamaahViewModel.uiState.collectAsStateWithLifecycle()
+
+    var selectedPaketForDetail by remember { mutableStateOf<com.agunganamiroh.data.model.Paket?>(null) }
+    var showPaketSheet by remember { mutableStateOf(false) }
+
+    val agentName = authState.user?.companyName ?: "Agent Anamiroh"
+    
+    LaunchedEffect(authState.user?.email) {
+        authState.user?.email?.let { email ->
+            jamaahViewModel.loadJamaahByAgent(email)
+        }
     }
 
-    var showProfileMenu by remember { mutableStateOf(false) }
-    var showNotificationBadge by remember { mutableStateOf(true) }
-    var selectedStatIndex by remember { mutableIntStateOf(-1) }
-    var isContentVisible by remember { mutableStateOf(false) }
-
+    var isVisible by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
         delay(100)
-        isContentVisible = true
+        isVisible = true
     }
 
-    val infiniteTransition = rememberInfiniteTransition(label = "shimmer")
-    val shimmerAlpha by infiniteTransition.animateFloat(
-        initialValue = 0.3f,
-        targetValue = 0.7f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(2000, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "shimmer"
-    )
+    // Prepare Stats Data
+    val stats = remember(jamaahState.jamaahs) {
+        val jamaahs = jamaahState.jamaahs
+        val total = jamaahs.size
+        val pending = jamaahs.count { it.status.lowercase() == "pending" }
+        val approved = jamaahs.count { it.status.lowercase() == "approved" || it.status.lowercase() == "verified" }
+        val omzet = jamaahs.sumOf { it.dp }
+        
+        val format = NumberFormat.getCurrencyInstance(Locale("id", "ID"))
+        val omzetFormatted = format.format(omzet).replace(",00", "")
 
-    val stats = remember {
         listOf(
-            StatItem("Jamaah Saya", "128", Icons.Default.Group, GoldPrimary, GoldPale),
-            StatItem("Pending", "12", Icons.Default.Schedule, WarningOrange, Color(0xFFFFF3E0)),
-            StatItem("Approved", "89", Icons.Default.Verified, SuccessGreen, Color(0xFFE8F5E9)),
-            StatItem("Omzet", "Rp 2.4M", Icons.Default.TrendingUp, GoldDark, GoldPale)
+            StatItem("Jamaah Saya", total.toString(), Icons.Default.Group, BrandGold, "+5%"),
+            StatItem("Pending", pending.toString(), Icons.Default.Schedule, WarningAmber, "-2%"),
+            StatItem("Approved", approved.toString(), Icons.Default.Verified, SuccessGreen, "+8%"),
+            StatItem("Total Omzet", omzetFormatted, Icons.AutoMirrored.Filled.TrendingUp, InfoBlue, "+12%")
+        )
+    }
+
+    val quickActions = remember {
+        listOf(
+            QuickAction("Tambah Jamaah Baru", "Pendaftaran data jamaah baru", Icons.Default.PersonAdd, "input_jamaah"),
+            QuickAction("Pembayaran", "Input bukti bayar jamaah", Icons.Default.Payments, "pembayaran"),
+            QuickAction("Invoice", "Buat tagihan untuk jamaah", Icons.AutoMirrored.Filled.ReceiptLong, "invoice"),
+            QuickAction("Data Jamaah", "Lihat daftar jamaah", Icons.Default.AssignmentInd, "data_jamaah")
         )
     }
 
     val menuItems = remember {
         listOf(
-            MenuItem("Input Jamaah", Icons.Default.PersonAdd, "input_jamaah", "Tambah jamaah baru"),
-            MenuItem("Data Jamaah", Icons.Default.AssignmentInd, "data_jamaah", "Kelola data jamaah", 3),
-            MenuItem("Pembayaran", Icons.Default.Payment, "pembayaran", "Verifikasi pembayaran", 5),
-            MenuItem("Invoice", Icons.Default.Receipt, "invoice", "Generate & kelola invoice"),
-            MenuItem("Riwayat", Icons.Default.History, "riwayat_transaksi", "Histori transaksi"),
-            MenuItem("Profil", Icons.Default.Person, "profil_agent", "Pengaturan profil")
+            MenuItem("Input Jamaah", "Pendaftaran jamaah baru", Icons.Default.PersonAdd, "input_jamaah"),
+            MenuItem("Data Jamaah", "Kelola database jamaah", Icons.Default.AssignmentInd, "data_jamaah", 3),
+            MenuItem("Pembayaran", "Verifikasi & riwayat bayar", Icons.Default.Payments, "pembayaran"),
+            MenuItem("Invoice", "Cetak & kirim tagihan", Icons.Default.Receipt, "invoice"),
+            MenuItem("Riwayat", "Laporan aktivitas agent", Icons.Default.History, "riwayat"),
+            MenuItem("Profil", "Pengaturan akun agent", Icons.Default.Person, "profil_agent")
         )
     }
 
-    val paketList = remember {
-        listOf(
-            PaketUmroh("1", "Umroh Regular 12 Hari", "15 Jan 2027", 28500000, 8, 45),
-            PaketUmroh("2", "Umroh Plus Turki 15 Hari", "22 Feb 2027", 38500000, 3, 30),
-            PaketUmroh("3", "Umroh Ramadhan 10 Hari", "10 Mar 2027", 32500000, 15, 40),
-            PaketUmroh("4", "Umroh Ekonomis 9 Hari", "05 Apr 2027", 21500000, 22, 50)
-        )
-    }
-
-    val aktivitasList = remember {
-        listOf(
-            Aktivitas("1", "Jamaah baru ditambahkan", "Ahmad Rizky - Paket Regular", "2 menit lalu", Icons.Default.PersonAdd, GoldPale, GoldDark),
-            Aktivitas("2", "Pembayaran diverifikasi", "Rp 15.000.000 - Ustad Haryono", "15 menit lalu", Icons.Default.CheckCircle, Color(0xFFE8F5E9), SuccessGreen),
-            Aktivitas("3", "Invoice dibuat", "INV-2027-00189 - 4 Jamaah", "1 jam lalu", Icons.Default.Receipt, Color(0xFFFFF3E0), WarningOrange),
-            Aktivitas("4", "Jamaah update dokumen", "Fatimah Azzahra - Paspor baru", "3 jam lalu", Icons.Default.Verified, Color(0xFFE3F2FD), InfoBlue)
-        )
-    }
-
-    Box(modifier = Modifier.fillMaxSize()) {
-        // ============================================================
-        // BACKGROUND IMAGE LAYER
-        // ============================================================
-        Image(
-            painter = painterResource(id = R.drawable.background_das),
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxSize()
-        )
-
-        // Dark overlay gradient for readability
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            Color(0x40000000),
-                            Color(0x80000000),
-                            Color(0xB3000000)
-                        )
-                    )
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(AppBackground)
+            .drawBehind {
+                drawCircle(
+                    color = BrandGold.copy(alpha = 0.05f),
+                    radius = 200.dp.toPx(),
+                    center = Offset(size.width, 0f)
                 )
-        )
-
-        // Floating gold particles effect (subtle)
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .drawBehind {
-                    drawCircle(
-                        color = GoldPrimary.copy(alpha = 0.08f),
-                        radius = size.width * 0.6f,
-                        center = Offset(size.width * 0.5f, -size.height * 0.1f)
-                    )
-                }
-        )
+                drawCircle(
+                    color = BrandGold.copy(alpha = 0.03f),
+                    radius = 150.dp.toPx(),
+                    center = Offset(0f, size.height)
+                )
+            }
+    ) {
+        IslamicPatternOverlay()
 
         Scaffold(
             topBar = {
-                TopAppBar(
-                    title = {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(start = 4.dp)
-                        ) {
-                            Surface(
-                                shape = CircleShape,
-                                color = GoldPrimary,
-                                modifier = Modifier.size(40.dp)
-                            ) {
-                                Box(contentAlignment = Alignment.Center) {
-                                    Text(
-                                        text = "AA",
-                                        color = Color.White,
-                                        fontWeight = FontWeight.ExtraBold,
-                                        fontSize = 16.sp,
-                                        style = MaterialTheme.typography.titleMedium.copy(
-                                            shadow = Shadow(
-                                                color = Color.Black.copy(alpha = 0.3f),
-                                                offset = Offset(1f, 1f),
-                                                blurRadius = 4f
-                                            )
-                                        )
-                                    )
-                                }
-                            }
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Column {
-                                Text(
-                                    text = "AGUNG ANAMIROH",
-                                    style = MaterialTheme.typography.titleMedium.copy(
-                                        fontWeight = FontWeight.ExtraBold,
-                                        fontSize = 17.sp,
-                                        color = Color.White,
-                                        shadow = Shadow(
-                                            color = Color.Black.copy(alpha = 0.5f),
-                                            offset = Offset(1f, 2f),
-                                            blurRadius = 6f
-                                        )
-                                    )
-                                )
-                                Text(
-                                    text = "Dashboard Agent",
-                                    style = MaterialTheme.typography.bodySmall.copy(
-                                        color = GoldLight.copy(alpha = 0.9f),
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.Medium
-                                    )
-                                )
-                            }
+                DashboardTopBar(
+                    agentName = agentName,
+                    onLogout = {
+                        authViewModel.logout()
+                        navController.navigate("login") {
+                            popUpTo("agent_dashboard") { inclusive = true }
                         }
                     },
-                    actions = {
-                        BadgedBox(
-                            badge = {
-                                if (showNotificationBadge) {
-                                    Badge(
-                                        containerColor = ErrorRed,
-                                        contentColor = Color.White
-                                    ) {
-                                        Text("3", fontSize = 10.sp)
-                                    }
-                                }
-                            },
-                            modifier = Modifier.padding(end = 4.dp)
-                        ) {
-                            IconButton(
-                                onClick = { showNotificationBadge = false }
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(40.dp)
-                                        .clip(CircleShape)
-                                        .background(Color.White.copy(alpha = 0.15f)),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Notifications,
-                                        contentDescription = "Notifications",
-                                        tint = Color.White,
-                                        modifier = Modifier.size(22.dp)
-                                    )
-                                }
-                            }
-                        }
-
-                        Box {
-                            IconButton(
-                                onClick = { showProfileMenu = true },
-                                modifier = Modifier.padding(end = 8.dp)
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(42.dp)
-                                        .clip(CircleShape)
-                                        .background(GoldPrimary.copy(alpha = 0.2f))
-                                        .shadow(6.dp, CircleShape)
-                                        .border(BorderStroke(2.dp, GoldPrimary.copy(alpha = shimmerAlpha)), CircleShape),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Person,
-                                        contentDescription = "Profile",
-                                        tint = GoldLight,
-                                        modifier = Modifier.size(24.dp)
-                                    )
-                                }
-                            }
-
-                            DropdownMenu(
-                                expanded = showProfileMenu,
-                                onDismissRequest = { showProfileMenu = false },
-                                modifier = Modifier.width(200.dp),
-                                containerColor = GlassWhite,
-                                border = BorderStroke(1.dp, GoldPrimary.copy(alpha = 0.4f))
-                            ) {
-                                Column(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(16.dp),
-                                    horizontalAlignment = Alignment.CenterHorizontally
-                                ) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(56.dp)
-                                            .clip(CircleShape)
-                                            .background(GoldPrimary.copy(alpha = 0.2f))
-                                            .border(BorderStroke(2.dp, GoldPrimary), CircleShape),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Icon(
-                                            Icons.Default.Person,
-                                            contentDescription = null,
-                                            tint = GoldPrimary,
-                                            modifier = Modifier.size(28.dp)
-                                        )
-                                    }
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    Text(
-                                        agentName,
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 15.sp,
-                                        color = TextPrimary
-                                    )
-                                    Text(
-                                        agentEmail,
-                                        fontSize = 12.sp,
-                                        color = TextMuted
-                                    )
-                                }
-                                HorizontalDivider(color = GoldPrimary.copy(alpha = 0.2f))
-                                DropdownMenuItem(
-                                    text = {
-                                        Text(
-                                            "Profil Saya",
-                                            fontWeight = FontWeight.SemiBold,
-                                            color = TextPrimary
-                                        )
-                                    },
-                                    leadingIcon = {
-                                        Icon(
-                                            Icons.Default.Person,
-                                            contentDescription = null,
-                                            tint = GoldPrimary
-                                        )
-                                    },
-                                    onClick = {
-                                        showProfileMenu = false
-                                        navController.navigate("profil_agent")
-                                    }
-                                )
-                                DropdownMenuItem(
-                                    text = {
-                                        Text(
-                                            "Pengaturan",
-                                            fontWeight = FontWeight.SemiBold,
-                                            color = TextPrimary
-                                        )
-                                    },
-                                    leadingIcon = {
-                                        Icon(
-                                            Icons.Default.Schedule,
-                                            contentDescription = null,
-                                            tint = GoldPrimary
-                                        )
-                                    },
-                                    onClick = {
-                                        showProfileMenu = false
-                                    }
-                                )
-                                HorizontalDivider(color = GoldPrimary.copy(alpha = 0.2f))
-                                DropdownMenuItem(
-                                    text = {
-                                        Text(
-                                            "Logout",
-                                            fontWeight = FontWeight.SemiBold,
-                                            color = ErrorRed
-                                        )
-                                    },
-                                    leadingIcon = {
-                                        Icon(
-                                            Icons.Default.Logout,
-                                            contentDescription = null,
-                                            tint = ErrorRed
-                                        )
-                                    },
-                                    onClick = {
-                                        showProfileMenu = false
-                                        navController.navigate("login") {
-                                            popUpTo("dashboard") { inclusive = true }
-                                        }
-                                    }
-                                )
-                            }
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color.Transparent
-                    )
+                    onNavigate = { route -> navController.navigate(route) }
                 )
             },
             containerColor = Color.Transparent
         ) { paddingValues ->
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
-                contentPadding = PaddingValues(horizontal = 20.dp, vertical = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(20.dp)
+            AnimatedVisibility(
+                visible = isVisible,
+                enter = fadeIn(tween(600)) + slideInVertically(tween(600)) { it / 10 }
             ) {
-                item {
-                    AnimatedVisibility(
-                        visible = isContentVisible,
-                        enter = fadeIn(tween(600)) + slideInVertically(tween(600)) { it / 2 }
-                    ) {
-                        WelcomeCard(
-                            agentName = agentName,
-                            currentDate = currentDate
-                        )
-                    }
-                }
-
-                item {
-                    AnimatedVisibility(
-                        visible = isContentVisible,
-                        enter = fadeIn(tween(700, delayMillis = 100)) + slideInVertically(tween(700, delayMillis = 100)) { it / 2 }
-                    ) {
-                        SectionTitle("Statistik")
-                    }
-                }
-
-                item {
-                    AnimatedVisibility(
-                        visible = isContentVisible,
-                        enter = fadeIn(tween(800, delayMillis = 200)) + slideInVertically(tween(800, delayMillis = 200)) { it / 2 }
-                    ) {
-                        StatGrid(
-                            stats = stats,
-                            onStatClick = { index ->
-                                selectedStatIndex = index
-                            }
-                        )
-                    }
-                }
-
-                item {
-                    AnimatedVisibility(
-                        visible = isContentVisible,
-                        enter = fadeIn(tween(900, delayMillis = 300)) + slideInVertically(tween(900, delayMillis = 300)) { it / 2 }
-                    ) {
-                        SectionTitle("Menu Utama")
-                    }
-                }
-
-                item {
-                    AnimatedVisibility(
-                        visible = isContentVisible,
-                        enter = fadeIn(tween(1000, delayMillis = 400)) + slideInVertically(tween(1000, delayMillis = 400)) { it / 2 }
-                    ) {
-                        MenuGrid(
-                            menuItems = menuItems,
-                            onMenuClick = { route ->
-                                navController.navigate(route)
-                            }
-                        )
-                    }
-                }
-
-                item {
-                    AnimatedVisibility(
-                        visible = isContentVisible,
-                        enter = fadeIn(tween(1100, delayMillis = 500)) + slideInVertically(tween(1100, delayMillis = 500)) { it / 2 }
-                    ) {
-                        SectionTitle("Aksi Cepat")
-                    }
-                }
-
-                item {
-                    AnimatedVisibility(
-                        visible = isContentVisible,
-                        enter = fadeIn(tween(1200, delayMillis = 600)) + slideInVertically(tween(1200, delayMillis = 600)) { it / 2 }
-                    ) {
-                        AksiCepatSection(
-                            onTambahJamaah = {
-                                navController.navigate("input_jamaah")
-                            },
-                            onBuatPembayaran = {
-                                navController.navigate("pembayaran")
-                            }
-                        )
-                    }
-                }
-
-                item {
-                    AnimatedVisibility(
-                        visible = isContentVisible,
-                        enter = fadeIn(tween(1300, delayMillis = 700)) + slideInVertically(tween(1300, delayMillis = 700)) { it / 2 }
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            SectionTitle("Paket Umroh")
-                            Box(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(20.dp))
-                                    .background(GoldPrimary.copy(alpha = 0.2f))
-                                    .clickable { }
-                                    .padding(horizontal = 14.dp, vertical = 6.dp)
-                            ) {
-                                Text(
-                                    text = "Lihat Semua",
-                                    style = MaterialTheme.typography.bodySmall.copy(
-                                        color = GoldLight,
-                                        fontWeight = FontWeight.SemiBold,
-                                        fontSize = 12.sp
-                                    )
-                                )
-                            }
-                        }
-                    }
-                }
-
-                item {
-                    AnimatedVisibility(
-                        visible = isContentVisible,
-                        enter = fadeIn(tween(1400, delayMillis = 800)) + slideInVertically(tween(1400, delayMillis = 800)) { it / 2 }
-                    ) {
-                        PaketHorizontalList(paketList = paketList)
-                    }
-                }
-
-                item {
-                    AnimatedVisibility(
-                        visible = isContentVisible,
-                        enter = fadeIn(tween(1500, delayMillis = 900)) + slideInVertically(tween(1500, delayMillis = 900)) { it / 2 }
-                    ) {
-                        SectionTitle("Aktivitas Terbaru")
-                    }
-                }
-
-                items(aktivitasList) { aktivitas ->
-                    AnimatedVisibility(
-                        visible = isContentVisible,
-                        enter = fadeIn(tween(1600, delayMillis = 1000))
-                    ) {
-                        AktivitasItem(aktivitas = aktivitas)
-                    }
-                }
-
-                item {
-                    Spacer(modifier = Modifier.height(32.dp))
-                }
-            }
-        }
-    }
-}
-
-// ============================================================
-// SECTION TITLE COMPONENT
-// ============================================================
-@Composable
-private fun SectionTitle(title: String) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.padding(bottom = 4.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .width(4.dp)
-                .height(20.dp)
-                .background(GoldPrimary, RoundedCornerShape(2.dp))
-        )
-        Spacer(modifier = Modifier.width(10.dp))
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleMedium.copy(
-                fontWeight = FontWeight.Bold,
-                fontSize = 18.sp,
-                color = Color.White,
-                shadow = Shadow(
-                    color = Color.Black.copy(alpha = 0.5f),
-                    offset = Offset(0f, 1f),
-                    blurRadius = 4f
-                )
-            )
-        )
-    }
-}
-
-// ============================================================
-// WELCOME CARD - GOLD GLASSMORPHISM WITH ANIMATION
-// ============================================================
-@Composable
-private fun WelcomeCard(
-    agentName: String,
-    currentDate: String
-) {
-    val scaleAnim = remember { Animatable(0.9f) }
-    val alphaAnim = remember { Animatable(0f) }
-
-    LaunchedEffect(Unit) {
-        alphaAnim.animateTo(1f, tween(800))
-        scaleAnim.animateTo(1f, tween(800, easing = FastOutSlowInEasing))
-    }
-
-    val infiniteTransition = rememberInfiniteTransition(label = "float")
-    val floatOffset by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = -4f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(3000, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "float"
-    )
-
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .scale(scaleAnim.value)
-            .alpha(alphaAnim.value)
-            .offset(y = floatOffset.dp)
-            .shadow(12.dp, RoundedCornerShape(28.dp)),
-        shape = RoundedCornerShape(28.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.Transparent
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 12.dp,
-            pressedElevation = 8.dp
-        )
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    brush = Brush.linearGradient(
-                        colors = listOf(
-                            GoldGradientStart.copy(alpha = 0.95f),
-                            GoldGradientMid.copy(alpha = 0.9f),
-                            GoldGradientEnd.copy(alpha = 0.95f)
-                        ),
-                        start = Offset(0f, 0f),
-                        end = Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY)
-                    )
-                )
-                .padding(26.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(120.dp)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(100.dp)
-                        .clip(CircleShape)
-                        .background(Color.White.copy(alpha = 0.08f))
-                        .align(Alignment.TopEnd)
-                        .offset(x = 20.dp, y = (-30).dp)
-                )
-                Box(
-                    modifier = Modifier
-                        .size(60.dp)
-                        .clip(CircleShape)
-                        .background(Color.White.copy(alpha = 0.05f))
-                        .align(Alignment.BottomStart)
-                        .offset(x = (-10).dp, y = 20.dp)
-                )
-            }
-
-            Column {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(36.dp)
-                            .clip(CircleShape)
-                            .background(Color.White.copy(alpha = 0.2f)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Person,
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Text(
-                        text = "Assalamu'alaikum",
-                        style = MaterialTheme.typography.bodyLarge.copy(
-                            color = Color.White.copy(alpha = 0.95f),
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Medium
-                        )
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                Text(
-                    text = "Selamat datang kembali,",
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        color = Color.White.copy(alpha = 0.85f),
-                        fontSize = 14.sp
-                    )
-                )
-                Spacer(modifier = Modifier.height(6.dp))
-                Text(
-                    text = agentName,
-                    style = MaterialTheme.typography.headlineSmall.copy(
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 26.sp,
-                        shadow = Shadow(
-                            color = Color.Black.copy(alpha = 0.3f),
-                            offset = Offset(1f, 2f),
-                            blurRadius = 4f
-                        )
-                    )
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(Color.White.copy(alpha = 0.15f))
-                        .padding(horizontal = 14.dp, vertical = 8.dp)
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.CalendarMonth,
-                            contentDescription = null,
-                            tint = Color.White.copy(alpha = 0.9f),
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = currentDate,
-                            style = MaterialTheme.typography.bodySmall.copy(
-                                color = Color.White.copy(alpha = 0.9f),
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.Medium
-                            )
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-// ============================================================
-// STATISTICS GRID COMPONENT
-// ============================================================
-@Composable
-private fun StatGrid(
-    stats: List<StatItem>,
-    onStatClick: (Int) -> Unit
-) {
-    Column(
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        stats.chunked(2).forEach { rowStats ->
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                rowStats.forEach { stat ->
-                    val actualIndex = stats.indexOf(stat)
-                    StatCard(
-                        stat = stat,
-                        modifier = Modifier.weight(1f),
-                        onClick = { onStatClick(actualIndex) }
-                    )
-                }
-                if (rowStats.size == 1) {
-                    Spacer(modifier = Modifier.weight(1f))
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun StatCard(
-    stat: StatItem,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit
-) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-    val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.93f else 1f,
-        animationSpec = tween(200, easing = FastOutSlowInEasing),
-        label = "stat_scale"
-    )
-
-    Card(
-        onClick = onClick,
-        modifier = modifier
-            .scale(scale)
-            .shadow(6.dp, RoundedCornerShape(20.dp)),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = GlassWhite
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 6.dp,
-            pressedElevation = 2.dp
-        ),
-        interactionSource = interactionSource
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalAlignment = Alignment.Start
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(46.dp)
-                    .clip(CircleShape)
-                    .background(stat.bgTint),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = stat.icon,
-                    contentDescription = null,
-                    tint = stat.tint,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-            Spacer(modifier = Modifier.height(12.dp))
-            Text(
-                text = stat.value,
-                style = MaterialTheme.typography.headlineSmall.copy(
-                    fontWeight = FontWeight.ExtraBold,
-                    fontSize = 22.sp,
-                    color = TextPrimary
-                )
-            )
-            Spacer(modifier = Modifier.height(2.dp))
-            Text(
-                text = stat.label,
-                style = MaterialTheme.typography.bodySmall.copy(
-                    color = TextSecondary,
-                    fontSize = 12.sp
-                ),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-        }
-    }
-}
-
-// ============================================================
-// MENU GRID COMPONENT
-// ============================================================
-@Composable
-private fun MenuGrid(
-    menuItems: List<MenuItem>,
-    onMenuClick: (String) -> Unit
-) {
-    Column(
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        menuItems.chunked(2).forEach { rowItems ->
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                rowItems.forEach { menu ->
-                    MenuCard(
-                        menu = menu,
-                        modifier = Modifier.weight(1f),
-                        onClick = { onMenuClick(menu.route) }
-                    )
-                }
-                if (rowItems.size == 1) {
-                    Spacer(modifier = Modifier.weight(1f))
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun MenuCard(
-    menu: MenuItem,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit
-) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-    val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.94f else 1f,
-        animationSpec = tween(200, easing = FastOutSlowInEasing),
-        label = "menu_scale"
-    )
-
-    Card(
-        onClick = onClick,
-        modifier = modifier
-            .scale(scale)
-            .shadow(6.dp, RoundedCornerShape(20.dp)),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = GlassWhite
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 6.dp,
-            pressedElevation = 2.dp
-        ),
-        interactionSource = interactionSource
-    ) {
-        Box(modifier = Modifier.fillMaxWidth()) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(18.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                BadgedBox(
-                    badge = {
-                        if (menu.badge > 0) {
-                            Badge(
-                                containerColor = ErrorRed,
-                                contentColor = Color.White,
-                                modifier = Modifier.offset(x = (-4).dp, y = 4.dp)
-                            ) {
-                                Text(
-                                    if (menu.badge > 9) "9+" else menu.badge.toString(),
-                                    fontSize = 10.sp
-                                )
-                            }
-                        }
-                    }
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(52.dp)
-                            .clip(CircleShape)
-                            .background(GoldPrimary.copy(alpha = 0.12f)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = menu.icon,
-                            contentDescription = menu.title,
-                            tint = GoldPrimary,
-                            modifier = Modifier.size(26.dp)
-                        )
-                    }
-                }
-                Spacer(modifier = Modifier.height(12.dp))
-                Text(
-                    text = menu.title,
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 13.sp,
-                        color = TextPrimary,
-                        textAlign = TextAlign.Center
-                    ),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = menu.description,
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        color = TextMuted,
-                        fontSize = 11.sp,
-                        textAlign = TextAlign.Center
-                    ),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-        }
-    }
-}
-
-// ============================================================
-// AKSI CEPAT SECTION
-// ============================================================
-@Composable
-private fun AksiCepatSection(
-    onTambahJamaah: () -> Unit,
-    onBuatPembayaran: () -> Unit
-) {
-    Column(
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        Button(
-            onClick = onTambahJamaah,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(54.dp),
-            shape = RoundedCornerShape(16.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = GoldPrimary,
-                contentColor = Color.White
-            ),
-            elevation = ButtonDefaults.buttonElevation(
-                defaultElevation = 6.dp,
-                pressedElevation = 2.dp
-            )
-        ) {
-            Icon(
-                imageVector = Icons.Default.PersonAdd,
-                contentDescription = null,
-                modifier = Modifier.size(20.dp)
-            )
-            Spacer(modifier = Modifier.width(10.dp))
-            Text(
-                text = "Tambah Jamaah Baru",
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 15.sp
-            )
-        }
-
-        OutlinedButton(
-            onClick = onBuatPembayaran,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(54.dp),
-            shape = RoundedCornerShape(16.dp),
-            colors = ButtonDefaults.outlinedButtonColors(
-                containerColor = Color.White.copy(alpha = 0.15f),
-                contentColor = GoldLight
-            ),
-            border = BorderStroke(1.5.dp, GoldPrimary.copy(alpha = 0.6f)),
-            elevation = ButtonDefaults.buttonElevation(
-                defaultElevation = 4.dp,
-                pressedElevation = 1.dp
-            )
-        ) {
-            Icon(
-                imageVector = Icons.Default.PointOfSale,
-                contentDescription = null,
-                modifier = Modifier.size(20.dp)
-            )
-            Spacer(modifier = Modifier.width(10.dp))
-            Text(
-                text = "Buat Pembayaran",
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 15.sp
-            )
-        }
-    }
-}
-
-// ============================================================
-// PAKET HORIZONTAL LIST
-// ============================================================
-@Composable
-private fun PaketHorizontalList(paketList: List<PaketUmroh>) {
-    LazyRow(
-        horizontalArrangement = Arrangement.spacedBy(14.dp),
-        contentPadding = PaddingValues(vertical = 4.dp)
-    ) {
-        items(paketList) { paket ->
-            PaketCard(paket = paket)
-        }
-    }
-}
-
-@Composable
-private fun PaketCard(paket: PaketUmroh) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-    val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.96f else 1f,
-        animationSpec = tween(200, easing = FastOutSlowInEasing),
-        label = "paket_scale"
-    )
-
-    val hargaFormatted = remember(paket.harga) {
-        NumberFormat.getCurrencyInstance(Locale("id", "ID")).format(paket.harga)
-    }
-
-    val sisaSeatPercent = remember(paket.sisaSeat, paket.totalSeat) {
-        (paket.sisaSeat.toFloat() / paket.totalSeat.toFloat())
-    }
-
-    val seatColor = when {
-        paket.sisaSeat <= 5 -> ErrorRed
-        paket.sisaSeat <= 10 -> WarningOrange
-        else -> SuccessGreen
-    }
-
-    val urgencyText = when {
-        paket.sisaSeat <= 3 -> "Segera!"
-        paket.sisaSeat <= 8 -> "Terbatas"
-        else -> "Tersedia"
-    }
-
-    Card(
-        onClick = { },
-        modifier = Modifier
-            .width(290.dp)
-            .scale(scale)
-            .shadow(8.dp, RoundedCornerShape(24.dp)),
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = GlassWhite
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 8.dp,
-            pressedElevation = 4.dp
-        ),
-        interactionSource = interactionSource
-    ) {
-        Column {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(100.dp)
-                    .background(
-                        brush = Brush.verticalGradient(
-                            colors = listOf(
-                                GoldGradientStart.copy(alpha = 0.3f),
-                                GoldGradientEnd.copy(alpha = 0.6f)
-                            )
-                        )
-                    )
-            ) {
-                Box(
+                LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(16.dp)
+                        .padding(paddingValues),
+                    contentPadding = PaddingValues(bottom = 32.dp),
+                    verticalArrangement = Arrangement.spacedBy(24.dp)
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(GoldPrimary)
-                            .align(Alignment.TopStart)
-                            .padding(horizontal = 12.dp, vertical = 5.dp)
-                    ) {
-                        Text(
-                            text = "UMROH",
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                color = Color.White,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 10.sp
-                            )
+                    item {
+                        DashboardHeroCard(
+                            target = 30,
+                            achievement = jamaahState.jamaahs.size
                         )
                     }
 
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(seatColor)
-                            .align(Alignment.TopEnd)
-                            .padding(horizontal = 10.dp, vertical = 5.dp)
-                    ) {
-                        Text(
-                            text = urgencyText,
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                color = Color.White,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 10.sp
-                            )
+                    item {
+                        QuickActionSection(
+                            actions = quickActions,
+                            onActionClick = { route -> navController.navigate(route) }
                         )
                     }
 
-                    Icon(
-                        imageVector = Icons.Default.Group,
-                        contentDescription = null,
-                        tint = Color.White.copy(alpha = 0.15f),
-                        modifier = Modifier
-                            .size(60.dp)
-                            .align(Alignment.BottomEnd)
-                            .offset(x = 10.dp, y = 10.dp)
-                    )
+                    item {
+                        StatisticsSection(stats = stats, isLoading = jamaahState.loading)
+                    }
+
+                    item {
+                        UpcomingPackageSection(
+                            paketList = paketState.pakets,
+                            isLoading = paketState.loading,
+                            onDetailClick = { paket ->
+                                selectedPaketForDetail = paket
+                                showPaketSheet = true
+                            }
+                        )
+                    }
+
+                    item {
+                        ActivitySection(
+                            activities = jamaahState.activities,
+                            isLoading = jamaahState.loading
+                        )
+                    }
+
+                    item {
+                        MenuSection(
+                            menuItems = menuItems,
+                            onMenuClick = { route -> navController.navigate(route) }
+                        )
+                    }
                 }
             }
+        }
 
-            Column(
-                modifier = Modifier.padding(18.dp)
+        if (showPaketSheet && selectedPaketForDetail != null) {
+            PaketDetailBottomSheet(
+                paket = selectedPaketForDetail!!,
+                onDismiss = { showPaketSheet = false }
+            )
+        }
+    }
+}
+
+// ============================================================
+// COMPONENTS
+// ============================================================
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun DashboardTopBar(
+    agentName: String,
+    onLogout: () -> Unit,
+    onNavigate: (String) -> Unit
+) {
+    var showMenu by remember { mutableStateOf(false) }
+
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .statusBarsPadding()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        color = SurfaceWhite.copy(alpha = 0.9f),
+        shape = RoundedCornerShape(24.dp),
+        shadowElevation = 4.dp
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(BrandGold.copy(alpha = 0.1f))
+                    .clickable { showMenu = true },
+                contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = paket.nama,
-                    style = MaterialTheme.typography.titleSmall.copy(
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 15.sp,
-                        color = TextPrimary
-                    ),
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
+                    text = agentName.take(1).uppercase(),
+                    color = BrandGold,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp
                 )
+            }
 
-                Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.width(12.dp))
 
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.CalendarMonth,
-                        contentDescription = null,
-                        tint = GoldPrimary,
-                        modifier = Modifier.size(14.dp)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = paket.tanggal,
-                        style = MaterialTheme.typography.bodySmall.copy(
-                            color = TextSecondary,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Medium
+            Column(modifier = Modifier.weight(1f)) {
+                Text(text = "Assalamu'alaikum", style = MaterialTheme.typography.labelSmall, color = TextSecondary)
+                Text(text = "$agentName 👋", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = TextPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
+
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                TopBarIcon(icon = Icons.Default.Notifications, hasBadge = true)
+                TopBarIcon(icon = Icons.AutoMirrored.Filled.Chat)
+                
+                Box {
+                    TopBarIcon(icon = Icons.Default.AccountCircle, onClick = { showMenu = true })
+                    DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }, modifier = Modifier.background(SurfaceWhite)) {
+                        DropdownMenuItem(
+                            text = { Text("Profil Saya", color = TextPrimary) },
+                            leadingIcon = { Icon(Icons.Default.Person, null, tint = BrandGold) },
+                            onClick = { showMenu = false; onNavigate("profil_agent") }
                         )
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                HorizontalDivider(color = GoldPrimary.copy(alpha = 0.15f))
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column {
-                        Text(
-                            text = "Harga",
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                color = TextMuted,
-                                fontSize = 11.sp
-                            )
-                        )
-                        Text(
-                            text = hargaFormatted,
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 16.sp,
-                                color = GoldDark
-                            )
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+                        DropdownMenuItem(
+                            text = { Text("Logout", color = ErrorRed) },
+                            leadingIcon = { Icon(Icons.AutoMirrored.Filled.Logout, null, tint = ErrorRed) },
+                            onClick = { showMenu = false; onLogout() }
                         )
                     }
-                    Box(
-                        modifier = Modifier
-                            .size(36.dp)
-                            .clip(CircleShape)
-                            .background(GoldPrimary.copy(alpha = 0.15f)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.ChevronRight,
-                            contentDescription = "Detail",
-                            tint = GoldPrimary,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(6.dp)
-                        .clip(RoundedCornerShape(6.dp))
-                        .background(Color(0xFFF0F0F0))
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth(sisaSeatPercent)
-                            .fillMaxHeight()
-                            .clip(RoundedCornerShape(6.dp))
-                            .background(GoldPrimary)
-                    )
-                }
-                Spacer(modifier = Modifier.height(6.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = "${paket.sisaSeat} dari ${paket.totalSeat} kursi",
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            color = TextMuted,
-                            fontSize = 10.sp
-                        )
-                    )
-                    Text(
-                        text = "${(sisaSeatPercent * 100).toInt()}%",
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            color = GoldPrimary,
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    )
                 }
             }
         }
     }
 }
 
-// ============================================================
-// AKTIVITAS ITEM - TIMELINE STYLE
-// ============================================================
 @Composable
-private fun AktivitasItem(aktivitas: Aktivitas) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        verticalAlignment = Alignment.Top
+private fun TopBarIcon(icon: ImageVector, hasBadge: Boolean = false, onClick: () -> Unit = {}) {
+    Box(
+        modifier = Modifier.size(40.dp).clip(CircleShape).background(BrandGold.copy(alpha = 0.05f)).clickable { onClick() },
+        contentAlignment = Alignment.Center
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(top = 4.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(44.dp)
-                    .clip(CircleShape)
-                    .background(aktivitas.iconBg)
-                    .border(BorderStroke(2.dp, GoldPrimary.copy(alpha = 0.3f)), CircleShape),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = aktivitas.icon,
-                    contentDescription = null,
-                    tint = aktivitas.iconTint,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-            Spacer(modifier = Modifier.height(4.dp))
-            Box(
-                modifier = Modifier
-                    .width(2.dp)
-                    .height(36.dp)
-                    .background(
-                        brush = Brush.verticalGradient(
-                            colors = listOf(
-                                GoldPrimary.copy(alpha = 0.3f),
-                                GoldPrimary.copy(alpha = 0.05f)
-                            )
-                        )
-                    )
-            )
+        Icon(imageVector = icon, contentDescription = null, tint = BrandGold, modifier = Modifier.size(20.dp))
+        if (hasBadge) {
+            Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(ErrorRed).align(Alignment.TopEnd).offset(x = (-8).dp, y = 8.dp))
         }
+    }
+}
 
-        Spacer(modifier = Modifier.width(14.dp))
+@Composable
+private fun DashboardHeroCard(target: Int, achievement: Int) {
+    val progressValue = (achievement.toFloat() / target.toFloat()).coerceIn(0f, 1f)
+    val animatedProgress by animateFloatAsState(targetValue = progressValue, animationSpec = tween(durationMillis = 1000), label = "progress")
+    val remaining = (target - achievement).coerceAtLeast(0)
+    val percentage = (progressValue * 100).toInt()
 
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f)
-                .shadow(4.dp, RoundedCornerShape(18.dp)),
-            shape = RoundedCornerShape(18.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = GlassWhite
-            ),
-            elevation = CardDefaults.cardElevation(
-                defaultElevation = 4.dp
-            )
-        ) {
-            Column(
-                modifier = Modifier.padding(16.dp)
-            ) {
-                Text(
-                    text = aktivitas.title,
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 14.sp,
-                        color = TextPrimary
-                    )
-                )
-                Spacer(modifier = Modifier.height(3.dp))
-                Text(
-                    text = aktivitas.subtitle,
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        color = TextSecondary,
-                        fontSize = 12.sp
-                    )
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Schedule,
-                        contentDescription = null,
-                        tint = GoldPrimary,
-                        modifier = Modifier.size(12.dp)
-                    )
-                    Spacer(modifier = Modifier.width(5.dp))
-                    Text(
-                        text = aktivitas.time,
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            color = GoldDark,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Medium
-                        )
-                    )
+    Card(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp).height(160.dp),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = SurfaceWhite),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Box(modifier = Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(SurfaceWhite, BrandGoldLight.copy(alpha = 0.15f), BrandGold.copy(alpha = 0.05f))))) {
+            Row(modifier = Modifier.fillMaxSize().padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
+                Column(modifier = Modifier.weight(1.2f)) {
+                    Box(modifier = Modifier.size(56.dp).clip(CircleShape).background(BrandGold.copy(alpha = 0.1f)), contentAlignment = Alignment.Center) {
+                        Icon(imageVector = Icons.Default.Flag, contentDescription = null, tint = BrandGold, modifier = Modifier.size(28.dp))
+                    }
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(text = "Target Bulanan", style = MaterialTheme.typography.labelMedium, color = TextSecondary, fontWeight = FontWeight.Medium)
+                    Text(text = "$achievement / $target", style = TextStyle(fontSize = 34.sp, fontWeight = FontWeight.ExtraBold, color = TextPrimary, letterSpacing = (-1).sp))
+                    Text(text = "Jamaah Terdaftar", style = MaterialTheme.typography.labelSmall, color = TextMuted)
+                }
+
+                Column(modifier = Modifier.weight(1f).padding(horizontal = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Surface(shape = RoundedCornerShape(12.dp), border = BorderStroke(1.dp, BrandGold.copy(alpha = 0.3f)), color = SurfaceWhite, modifier = Modifier.size(width = 54.dp, height = 32.dp)) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Text(text = "$percentage%", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = BrandGold)
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+                    LinearProgressIndicator(progress = { animatedProgress }, modifier = Modifier.fillMaxWidth().height(10.dp).clip(CircleShape), color = BrandGold, trackColor = BrandGold.copy(alpha = 0.1f))
+                    Spacer(modifier = Modifier.height(12.dp))
+                    val currentMonth = SimpleDateFormat("MMMM yyyy", Locale("id", "ID")).format(Date())
+                    Text(text = "1 - 31 $currentMonth", style = MaterialTheme.typography.labelSmall, color = TextMuted, fontSize = 10.sp)
+                }
+
+                Box(modifier = Modifier.fillMaxHeight(0.7f).width(1.dp).background(TextMuted.copy(alpha = 0.2f)))
+
+                Column(modifier = Modifier.weight(1f).padding(start = 16.dp), horizontalAlignment = Alignment.End) {
+                    Text(text = "Sisa Target", style = MaterialTheme.typography.labelSmall, color = TextSecondary, textAlign = TextAlign.End)
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
+                        Icon(Icons.Default.Group, null, tint = BrandGold, modifier = Modifier.size(14.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(text = "$remaining", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = TextPrimary, textAlign = TextAlign.End)
+                        Text(text = " Jamaah", style = MaterialTheme.typography.labelSmall, color = TextMuted, textAlign = TextAlign.End)
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(text = "Ayo capai target bulan ini.", style = MaterialTheme.typography.labelSmall, color = TextSecondary, fontWeight = FontWeight.Medium, lineHeight = 14.sp, fontSize = 11.sp, textAlign = TextAlign.End)
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun QuickActionSection(actions: List<QuickAction>, onActionClick: (String) -> Unit) {
+    Column(modifier = Modifier.padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text(text = "Aksi Cepat", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = TextPrimary)
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            actions.forEach { action ->
+                QuickActionCard(action = action, onClick = { onActionClick(action.route) })
+            }
+        }
+    }
+}
+
+@Composable
+private fun QuickActionCard(action: QuickAction, onClick: () -> Unit) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(if (isPressed) 0.98f else 1f, tween(120), label = "")
+
+    Card(modifier = Modifier.fillMaxWidth().scale(scale).clickable(interactionSource = interactionSource, indication = null) { onClick() }, shape = RoundedCornerShape(20.dp), colors = CardDefaults.cardColors(containerColor = SurfaceWhite), elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)) {
+        Row(modifier = Modifier.padding(16.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Box(modifier = Modifier.size(48.dp).clip(CircleShape).background(BrandGold.copy(alpha = 0.08f)), contentAlignment = Alignment.Center) {
+                Icon(imageVector = action.icon, contentDescription = null, tint = BrandGold, modifier = Modifier.size(24.dp))
+            }
+            Spacer(modifier = Modifier.width(16.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(text = action.title, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = TextPrimary)
+                Text(text = action.subtitle, style = MaterialTheme.typography.labelSmall, color = TextSecondary)
+            }
+            Icon(imageVector = Icons.Default.ChevronRight, contentDescription = null, tint = BrandGold.copy(alpha = 0.5f), modifier = Modifier.size(20.dp))
+        }
+    }
+}
+
+@Composable
+private fun StatisticsSection(stats: List<StatItem>, isLoading: Boolean = false) {
+    Column(modifier = Modifier.padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text(text = "Statistik Performa", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = TextPrimary)
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                StatCard(stat = stats[0], modifier = Modifier.weight(1f), isLoading = isLoading)
+                StatCard(stat = stats[1], modifier = Modifier.weight(1f), isLoading = isLoading)
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                StatCard(stat = stats[2], modifier = Modifier.weight(1f), isLoading = isLoading)
+                StatCard(stat = stats[3], modifier = Modifier.weight(1f), isLoading = isLoading)
+            }
+        }
+    }
+}
+
+@Composable
+private fun StatCard(stat: StatItem, modifier: Modifier = Modifier, isLoading: Boolean = false) {
+    Card(modifier = modifier, shape = RoundedCornerShape(20.dp), colors = CardDefaults.cardColors(containerColor = SurfaceWhite), elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Box(modifier = Modifier.size(32.dp).clip(CircleShape).background(stat.color.copy(alpha = 0.1f)), contentAlignment = Alignment.Center) {
+                    Icon(stat.icon, null, tint = stat.color, modifier = Modifier.size(16.dp))
+                }
+                if (!isLoading) {
+                    Box(modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(SuccessGreen.copy(alpha = 0.1f)).padding(horizontal = 6.dp, vertical = 2.dp)) {
+                        Text(text = stat.growth, style = MaterialTheme.typography.labelSmall, color = SuccessGreen, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+            if (isLoading) {
+                Box(modifier = Modifier.fillMaxWidth().height(28.dp), contentAlignment = Alignment.CenterStart) {
+                    CircularProgressIndicator(modifier = Modifier.size(20.dp), color = BrandGold, strokeWidth = 2.dp)
+                }
+            } else {
+                Text(text = stat.value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold, color = TextPrimary)
+            }
+            Text(text = stat.label, style = MaterialTheme.typography.labelSmall, color = TextSecondary)
+        }
+    }
+}
+
+@Composable
+private fun UpcomingPackageSection(
+    paketList: List<com.agunganamiroh.data.model.Paket>,
+    isLoading: Boolean,
+    onDetailClick: (com.agunganamiroh.data.model.Paket) -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            Text(text = "Paket Umroh & Haji", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = TextPrimary)
+            Text(text = "Lihat Semua", style = MaterialTheme.typography.labelMedium, color = BrandGold, fontWeight = FontWeight.Bold, modifier = Modifier.clickable { })
+        }
+        if (isLoading) {
+            LazyRow(contentPadding = PaddingValues(horizontal = 20.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                items(3) { ShimmerPackageCard() }
+            }
+        } else if (paketList.isEmpty()) {
+            Box(modifier = Modifier.fillMaxWidth().height(100.dp), contentAlignment = Alignment.Center) {
+                Text("No available packages.", style = MaterialTheme.typography.bodyMedium, color = TextMuted)
+            }
+        } else {
+            LazyRow(contentPadding = PaddingValues(horizontal = 20.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                items(paketList) { paket ->
+                    PackageCard(paket = paket, onDetailClick = onDetailClick)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun PackageCard(paket: com.agunganamiroh.data.model.Paket, onDetailClick: (com.agunganamiroh.data.model.Paket) -> Unit) {
+    Card(modifier = Modifier.width(260.dp).clickable { onDetailClick(paket) }, shape = RoundedCornerShape(20.dp), colors = CardDefaults.cardColors(containerColor = SurfaceWhite), elevation = CardDefaults.cardElevation(defaultElevation = 2.dp), border = BorderStroke(1.dp, BrandGold.copy(alpha = 0.1f))) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            val isAvailable = paket.sisaSeat > 0
+            Surface(shape = RoundedCornerShape(8.dp), color = (if (isAvailable) SuccessGreen else ErrorRed).copy(alpha = 0.1f)) {
+                Text(text = if (isAvailable) "Available" else "Sold Out", modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp), style = MaterialTheme.typography.labelSmall, color = if (isAvailable) SuccessGreen else ErrorRed, fontWeight = FontWeight.Bold)
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+            Text(text = paket.title, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold, color = TextPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(text = "${paket.durasi} • ${paket.maskapai}", style = MaterialTheme.typography.labelSmall, color = TextSecondary)
+            Spacer(modifier = Modifier.height(16.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.CalendarMonth, null, tint = BrandGold, modifier = Modifier.size(14.dp))
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(paket.tanggal, style = MaterialTheme.typography.labelSmall, color = TextPrimary)
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                val format = NumberFormat.getCurrencyInstance(Locale("id", "ID"))
+                Text(text = format.format(paket.harga).replace(",00", ""), style = MaterialTheme.typography.labelLarge, color = BrandGold, fontWeight = FontWeight.ExtraBold)
+                Text(text = "${paket.sisaSeat} Seat", style = MaterialTheme.typography.labelSmall, color = if (paket.sisaSeat < 5) ErrorRed else TextMuted)
+            }
+        }
+    }
+}
+
+@Composable
+private fun ShimmerPackageCard() {
+    Card(modifier = Modifier.width(260.dp).height(160.dp), shape = RoundedCornerShape(20.dp), colors = CardDefaults.cardColors(containerColor = SurfaceWhite.copy(alpha = 0.5f))) {}
+}
+
+@Composable
+private fun ActivitySection(activities: List<com.agunganamiroh.viewmodel.Activity>, isLoading: Boolean) {
+    Column(modifier = Modifier.padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            Text(text = "Aktivitas Terbaru", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = TextPrimary)
+            Text(text = "See All", style = MaterialTheme.typography.labelMedium, color = BrandGold, fontWeight = FontWeight.Bold, modifier = Modifier.clickable { })
+        }
+        Card(shape = RoundedCornerShape(24.dp), colors = CardDefaults.cardColors(containerColor = SurfaceWhite), elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                if (isLoading) {
+                    repeat(3) { ActivityShimmerItem() }
+                } else if (activities.isEmpty()) {
+                    Box(modifier = Modifier.fillMaxWidth().height(80.dp), contentAlignment = Alignment.Center) {
+                        Text("No recent activity.", style = MaterialTheme.typography.bodyMedium, color = TextMuted)
+                    }
+                } else {
+                    activities.take(5).forEachIndexed { index, activity ->
+                        ActivityItem(activity = activity, isLast = index == minOf(activities.size - 1, 4))
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ActivityItem(activity: com.agunganamiroh.viewmodel.Activity, isLast: Boolean) {
+    Row(modifier = Modifier.fillMaxWidth()) {
+        val color = when(activity.type) {
+            "registration" -> InfoBlue
+            "status" -> if(activity.status == "approved") SuccessGreen else WarningAmber
+            "payment" -> SuccessGreen
+            else -> BrandGold
+        }
+        val icon = when(activity.type) {
+            "registration" -> Icons.Default.PersonAdd
+            "status" -> Icons.Default.FactCheck
+            "payment" -> Icons.Default.Payments
+            else -> Icons.Default.Notifications
+        }
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Box(modifier = Modifier.size(12.dp).clip(CircleShape).background(color))
+            if (!isLast) {
+                Box(modifier = Modifier.width(2.dp).height(50.dp).background(BrandGold.copy(alpha = 0.1f)))
+            }
+        }
+        Spacer(modifier = Modifier.width(16.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Text(text = activity.title, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = TextPrimary)
+                Text(text = getRelativeTime(activity.time), style = MaterialTheme.typography.labelSmall, color = TextMuted)
+            }
+            Text(text = activity.subtitle, style = MaterialTheme.typography.labelSmall, color = TextSecondary)
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+    }
+}
+
+@Composable
+private fun ActivityShimmerItem() {
+    Spacer(modifier = Modifier.height(60.dp))
+}
+
+private fun getRelativeTime(timeMillis: Long): String {
+    val now = System.currentTimeMillis()
+    val diff = now - timeMillis
+    return when {
+        diff < 60_000 -> "Just now"
+        diff < 3600_000 -> "${diff / 60_000} mins ago"
+        diff < 86400_000 -> "${diff / 3600_000} hours ago"
+        diff < 604800_000 -> "${diff / 86400_000} days ago"
+        else -> SimpleDateFormat("dd MMM", Locale.getDefault()).format(Date(timeMillis))
+    }
+}
+
+@Composable
+private fun MenuSection(menuItems: List<MenuItem>, onMenuClick: (String) -> Unit) {
+    Column(modifier = Modifier.padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text(text = "Menu Utama", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = TextPrimary)
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            menuItems.chunked(2).forEach { row ->
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    MenuCard(item = row[0], modifier = Modifier.weight(1f), onClick = { onMenuClick(row[0].route) })
+                    if (row.size > 1) {
+                        MenuCard(item = row[1], modifier = Modifier.weight(1f), onClick = { onMenuClick(row[1].route) })
+                    } else {
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun MenuCard(item: MenuItem, modifier: Modifier = Modifier, onClick: () -> Unit) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(if (isPressed) 0.97f else 1f, tween(120), label = "")
+
+    Card(modifier = modifier.scale(scale).clickable(interactionSource = interactionSource, indication = null) { onClick() }, shape = RoundedCornerShape(18.dp), colors = CardDefaults.cardColors(containerColor = SurfaceWhite), elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Top) {
+                Box(modifier = Modifier.size(40.dp).clip(CircleShape).background(BrandGold.copy(alpha = 0.05f)), contentAlignment = Alignment.Center) {
+                    Icon(item.icon, null, tint = BrandGold, modifier = Modifier.size(20.dp))
+                }
+                if (item.badge > 0) {
+                    Badge(containerColor = ErrorRed, contentColor = Color.White) { Text(item.badge.toString()) }
+                } else {
+                    Icon(Icons.Default.ChevronRight, null, tint = TextMuted, modifier = Modifier.size(16.dp))
+                }
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+            Text(text = item.title, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = TextPrimary)
+            Text(text = item.subtitle, style = MaterialTheme.typography.labelSmall, color = TextSecondary, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
+    }
+}
+
+@Composable
+private fun IslamicPatternOverlay() {
+    Canvas(modifier = Modifier.fillMaxSize().alpha(0.03f)) {
+        val sizePx = 60.dp.toPx()
+        val strokeWidth = 1.dp.toPx()
+        for (x in 0..(size.width / sizePx).toInt()) {
+            for (y in 0..(size.height / sizePx).toInt()) {
+                val cx = x * sizePx
+                val cy = y * sizePx
+                drawPath(path = Path().apply {
+                    moveTo(cx, cy - sizePx * 0.5f)
+                    lineTo(cx + sizePx * 0.15f, cy - sizePx * 0.15f)
+                    lineTo(cx + sizePx * 0.5f, cy)
+                    lineTo(cx + sizePx * 0.15f, cy + sizePx * 0.15f)
+                    lineTo(cx, cy + sizePx * 0.5f)
+                    lineTo(cx - sizePx * 0.15f, cy + sizePx * 0.15f)
+                    lineTo(cx - sizePx * 0.5f, cy)
+                    lineTo(cx - sizePx * 0.15f, cy - sizePx * 0.15f)
+                    close()
+                }, color = BrandGold, style = Stroke(width = strokeWidth))
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun PaketDetailBottomSheet(paket: com.agunganamiroh.data.model.Paket, onDismiss: () -> Unit) {
+    ModalBottomSheet(onDismissRequest = onDismiss, containerColor = SurfaceWhite, dragHandle = { BottomSheetDefaults.DragHandle(color = BrandGold.copy(alpha = 0.3f)) }) {
+        Column(modifier = Modifier.fillMaxWidth().padding(24.dp).padding(bottom = 32.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
+            Text(text = "Detail Paket", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = BrandGold)
+            Box(modifier = Modifier.fillMaxWidth().height(180.dp).clip(RoundedCornerShape(16.dp)).background(BrandGoldLight.copy(alpha = 0.3f)), contentAlignment = Alignment.Center) {
+                Icon(Icons.Default.Image, null, tint = BrandGold.copy(alpha = 0.4f), modifier = Modifier.size(48.dp))
+                if (paket.brosurName.isNotBlank()) {
+                    Text("Brochure: ${paket.brosurName}", style = MaterialTheme.typography.labelSmall, color = BrandGold, modifier = Modifier.align(Alignment.BottomCenter).padding(8.dp))
+                }
+            }
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(paket.title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.ExtraBold, color = TextPrimary)
+                Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    DetailBadge(icon = Icons.Default.Timer, text = paket.durasi)
+                    DetailBadge(icon = Icons.Default.Flight, text = paket.maskapai)
+                }
+                HorizontalDivider(color = AppBackground)
+                DetailRow(label = "Tanggal Keberangkatan", value = paket.tanggal, icon = Icons.Default.CalendarToday)
+                DetailRow(label = "Hotel Makkah", value = paket.hotelMakkah, icon = Icons.Default.Hotel)
+                DetailRow(label = "Hotel Madinah", value = paket.hotelMadinah, icon = Icons.Default.Hotel)
+                DetailRow(label = "Sisa Kursi", value = "${paket.sisaSeat} Kursi", icon = Icons.Default.Group)
+                val format = NumberFormat.getCurrencyInstance(Locale("id", "ID"))
+                DetailRow(label = "Harga Paket", value = format.format(paket.harga).replace(",00", ""), icon = Icons.Default.Payments, valueColor = BrandGold, isLarge = true)
+            }
+            Button(onClick = onDismiss, modifier = Modifier.fillMaxWidth().height(56.dp), shape = RoundedCornerShape(16.dp), colors = ButtonDefaults.buttonColors(containerColor = BrandGold)) {
+                Text("TUTUP", fontWeight = FontWeight.Bold)
+            }
+        }
+    }
+}
+
+@Composable
+private fun DetailBadge(icon: ImageVector, text: String) {
+    Surface(shape = RoundedCornerShape(12.dp), color = BrandGold.copy(alpha = 0.05f), border = BorderStroke(1.dp, BrandGold.copy(alpha = 0.1f))) {
+        Row(modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+            Icon(icon, null, tint = BrandGold, modifier = Modifier.size(14.dp))
+            Spacer(modifier = Modifier.width(6.dp))
+            Text(text, style = MaterialTheme.typography.labelMedium, color = TextPrimary, fontWeight = FontWeight.Medium)
+        }
+    }
+}
+
+@Composable
+private fun DetailRow(label: String, value: String, icon: ImageVector, valueColor: Color = TextPrimary, isLarge: Boolean = false) {
+    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Box(modifier = Modifier.size(32.dp).clip(CircleShape).background(BrandGold.copy(alpha = 0.05f)), contentAlignment = Alignment.Center) {
+            Icon(icon, null, tint = BrandGold, modifier = Modifier.size(16.dp))
+        }
+        Spacer(modifier = Modifier.width(16.dp))
+        Column {
+            Text(label, style = MaterialTheme.typography.labelSmall, color = TextMuted)
+            Text(text = value, style = if (isLarge) MaterialTheme.typography.titleLarge else MaterialTheme.typography.bodyLarge, fontWeight = if (isLarge) FontWeight.ExtraBold else FontWeight.Bold, color = valueColor)
         }
     }
 }

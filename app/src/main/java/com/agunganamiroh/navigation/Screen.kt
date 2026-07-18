@@ -12,4 +12,12 @@ sealed class Screen(
     object AgentDashboard :
         Screen("agent_dashboard")
 
+    object DataJamaah :
+        Screen("data_jamaah")
+
+    object DetailJamaah :
+        Screen("detail_jamaah/{id}") {
+        fun createRoute(id: String) = "detail_jamaah/$id"
+    }
+
 }

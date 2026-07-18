@@ -52,9 +52,9 @@ class AuthRepository {
         return auth.currentUser != null
     }
 
-    suspend fun getUserRole(
+    suspend fun getUserData(
         uid: String
-    ): String {
+    ): com.agunganamiroh.data.model.User? {
 
         return try {
 
@@ -64,12 +64,11 @@ class AuthRepository {
                 .get()
                 .await()
 
-            document.getString("role")
-                ?: "agent"
+            document.toObject(com.agunganamiroh.data.model.User::class.java)
 
         } catch (e: Exception) {
 
-            "agent"
+            null
 
         }
     }
