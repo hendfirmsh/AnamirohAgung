@@ -37,6 +37,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
@@ -61,19 +62,6 @@ import kotlinx.coroutines.launch
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.*
-
-// ============================================================
-// ENTERPRISE THEME COLORS
-// ============================================================
-private val BrandGold = Color(0xFFC89B3C)
-private val BrandGoldLight = Color(0xFFF7E9B6)
-private val AppBackground = Color(0xFFFAF8F5)
-private val SurfaceWhite = Color(0xFFFFFFFF)
-private val TextPrimary = Color(0xFF1F1F1F)
-private val TextSecondary = Color(0xFF6B7280)
-private val TextMuted = Color(0xFF9CA3AF)
-private val SuccessGreen = Color(0xFF22C55E)
-private val ErrorRed = Color(0xFFEF4444)
 
 // ============================================================
 // MAIN SCREEN
@@ -126,6 +114,13 @@ fun InputJamaahScreen(
     var akteChecked by remember { mutableStateOf(false) }
     var meningitisChecked by remember { mutableStateOf(false) }
 
+    // Colors
+    val primaryColor = MaterialTheme.colorScheme.primary
+    val errorColor = MaterialTheme.colorScheme.error
+    val surfaceColor = MaterialTheme.colorScheme.surface
+    val onSurfaceColor = MaterialTheme.colorScheme.onSurface
+    val onSurfaceVariantColor = MaterialTheme.colorScheme.onSurfaceVariant
+
     // Prefill data if edit
     LaunchedEffect(editId) {
         if (isEdit) {
@@ -147,9 +142,6 @@ fun InputJamaahScreen(
             dpInput = j.dp.toString()
             catatan = j.requestTambahan
             
-            // Note: selectedPaket will be automatically loaded by ViewModel in loadJamaahDetail
-            
-            // Prefill checkboxes
             ktpChecked = j.ktp
             kkChecked = j.kk
             pasporChecked = j.paspor
@@ -160,12 +152,10 @@ fun InputJamaahScreen(
 
     LaunchedEffect(jamaahState.updateSuccess) {
         if (jamaahState.updateSuccess) {
-            android.util.Log.d("InputJamaahScreen", "Step 5: Success State Detected. Loading Hidden.")
             scope.launch {
                 snackbarHostState.showSnackbar(if (isEdit) "✅ Data Jamaah berhasil diperbarui" else "✅ Data Jamaah berhasil disimpan")
             }
             delay(1000)
-            android.util.Log.d("InputJamaahScreen", "Step 6: Navigation Triggered (popBackStack)")
             navController.popBackStack()
             jamaahViewModel.resetUpdateStatus()
         }
@@ -196,7 +186,6 @@ fun InputJamaahScreen(
     )
 
     val genderOptions = listOf("Laki-laki", "Perempuan")
-    val programOptions = listOf("Umroh Reguler", "Umroh Plus Turki", "Umroh Ramadhan")
 
     // Handle Back Press
     BackHandler {
@@ -233,25 +222,20 @@ fun InputJamaahScreen(
     }
 
     fun submitData() {
-        android.util.Log.d("InputJamaahScreen", "Step 1: Save Button Clicked. isEdit=$isEdit")
         val selectedPaket = jamaahState.selectedPaket
 
         if (selectedPaket == null) {
-            android.util.Log.d("InputJamaahScreen", "Step 1.1: Validation Failed - No Package Selected")
             scope.launch { snackbarHostState.showSnackbar("Please select an Umrah package.") }
             return
         }
         if (!validate()) {
-            android.util.Log.d("InputJamaahScreen", "Step 1.2: Validation Failed: $errors")
             scope.launch {
                 snackbarHostState.showSnackbar("Harap lengkapi semua field wajib")
             }
             return
         }
 
-        android.util.Log.d("InputJamaahScreen", "Step 1.3: Validation Passed")
         if (isEdit) {
-            android.util.Log.d("InputJamaahScreen", "Step 2: Firestore Save (Update) Started")
             val updates = mapOf(
                 "nama" to nama,
                 "program" to selectedPaket.title,
@@ -275,7 +259,6 @@ fun InputJamaahScreen(
             )
             jamaahViewModel.updateJamaahDetail(editId!!, updates)
         } else {
-            android.util.Log.d("InputJamaahScreen", "Step 2: Firestore Save (Register) Started")
             val jamaah = Jamaah(
                 id = System.currentTimeMillis().toString(),
                 nama = nama,
@@ -313,7 +296,7 @@ fun InputJamaahScreen(
                         tanggalLahir = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date(it))
                     }
                     showBirthDatePicker = false
-                }) { Text("Pilih", color = BrandGold) }
+                }) { Text("Pilih", color = primaryColor) }
             },
             dismissButton = { TextButton(onClick = { showBirthDatePicker = false }) { Text("Batal") } }
         ) {
@@ -330,13 +313,13 @@ fun InputJamaahScreen(
             confirmButton = {
                 Button(
                     onClick = { showConfirmDialog = false; submitData() },
-                    colors = ButtonDefaults.buttonColors(containerColor = BrandGold)
-                ) { Text("Simpan") }
+                    colors = ButtonDefaults.buttonColors(containerColor = primaryColor)
+                ) { Text("Simpan", color = MaterialTheme.colorScheme.onPrimary) }
             },
             dismissButton = {
-                TextButton(onClick = { showConfirmDialog = false }) { Text("Batal") }
+                TextButton(onClick = { showConfirmDialog = false }) { Text("Batal", color = onSurfaceVariantColor) }
             },
-            containerColor = SurfaceWhite,
+            containerColor = surfaceColor,
             shape = RoundedCornerShape(24.dp)
         )
     }
@@ -348,16 +331,16 @@ fun InputJamaahScreen(
             title = { Text("Simpan sebagai Draft?", fontWeight = FontWeight.Bold) },
             text = { Text("Anda memiliki perubahan yang belum disimpan. Simpan sebagai draft atau keluar?") },
             confirmButton = {
-                Button(onClick = { showDraftDialog = false /* TODO */ }, colors = ButtonDefaults.buttonColors(containerColor = BrandGold)) {
-                    Text("Simpan Draft")
+                Button(onClick = { showDraftDialog = false }, colors = ButtonDefaults.buttonColors(containerColor = primaryColor)) {
+                    Text("Simpan Draft", color = MaterialTheme.colorScheme.onPrimary)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDraftDialog = false; navController.popBackStack() }) {
-                    Text("Keluar", color = ErrorRed)
+                    Text("Keluar", color = errorColor)
                 }
             },
-            containerColor = SurfaceWhite,
+            containerColor = surfaceColor,
             shape = RoundedCornerShape(24.dp)
         )
     }
@@ -365,23 +348,19 @@ fun InputJamaahScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(Color(0xFFFFFDF8), AppBackground)
-                )
-            )
+            .background(MaterialTheme.colorScheme.background)
     ) {
         IslamicPatternOverlay()
 
         Scaffold(
             topBar = {
                 CenterAlignedTopAppBar(
-                    title = { Text("Pendaftaran", fontWeight = FontWeight.ExtraBold, color = BrandGold, fontSize = 20.sp) },
+                    title = { Text("Pendaftaran", fontWeight = FontWeight.ExtraBold, color = primaryColor, fontSize = 20.sp) },
                     navigationIcon = {
                         IconButton(onClick = { 
                             if (nama.isNotEmpty() || noHp.isNotEmpty()) showDraftDialog = true else navController.popBackStack() 
                         }) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = BrandGold)
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = primaryColor)
                         }
                     },
                     colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent)
@@ -444,10 +423,7 @@ fun InputJamaahScreen(
                     item {
                         BirthSection(
                             tanggalLahir = tanggalLahir,
-                            onDateSelected = { 
-                                tanggalLahir = it
-                                android.util.Log.d("DATE", "ViewModel Updated: $it")
-                            },
+                            onDateSelected = { tanggalLahir = it },
                             tempatLahir = tempatLahir,
                             onTempatLahirChange = { tempatLahir = it },
                             isError = errors.contains("tanggalLahir") || errors.contains("tempatLahir"),
@@ -495,14 +471,13 @@ fun InputJamaahScreen(
             }
         }
 
-        // Loading Overlay
         if (jamaahState.loading) {
-            Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.3f)).clickable(enabled = false) {}, contentAlignment = Alignment.Center) {
-                Card(shape = RoundedCornerShape(24.dp), colors = CardDefaults.cardColors(containerColor = SurfaceWhite)) {
+            Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.5f)).clickable(enabled = false) {}, contentAlignment = Alignment.Center) {
+                Card(shape = RoundedCornerShape(24.dp), colors = CardDefaults.cardColors(containerColor = surfaceColor)) {
                     Column(modifier = Modifier.padding(32.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                        CircularProgressIndicator(color = BrandGold, strokeWidth = 3.dp)
+                        CircularProgressIndicator(color = primaryColor, strokeWidth = 3.dp)
                         Spacer(modifier = Modifier.height(16.dp))
-                        Text("Menyimpan data jamaah...", style = MaterialTheme.typography.bodyMedium, color = TextSecondary)
+                        Text("Menyimpan data jamaah...", style = MaterialTheme.typography.bodyMedium, color = onSurfaceVariantColor)
                     }
                 }
             }
@@ -519,25 +494,25 @@ private fun RegistrationHeader() {
     Card(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
         shape = RoundedCornerShape(28.dp),
-        colors = CardDefaults.cardColors(containerColor = SurfaceWhite),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Box(
             modifier = Modifier.fillMaxWidth().background(
-                brush = Brush.horizontalGradient(listOf(BrandGold.copy(alpha = 0.05f), SurfaceWhite))
+                brush = Brush.horizontalGradient(listOf(MaterialTheme.colorScheme.primary.copy(alpha = 0.05f), MaterialTheme.colorScheme.surface))
             ).padding(24.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
-                    modifier = Modifier.size(56.dp).clip(CircleShape).background(BrandGold.copy(alpha = 0.1f)),
+                    modifier = Modifier.size(56.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(Icons.Default.Assignment, null, tint = BrandGold, modifier = Modifier.size(28.dp))
+                    Icon(Icons.Default.Assignment, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(28.dp))
                 }
                 Spacer(modifier = Modifier.width(16.dp))
                 Column {
-                    Text("Formulir Pendaftaran", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = TextPrimary)
-                    Text("Lengkapi data calon jamaah dengan benar", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
+                    Text("Formulir Pendaftaran", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                    Text("Lengkapi data calon jamaah dengan benar", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         }
@@ -549,20 +524,20 @@ private fun ProgressCard(progress: Float) {
     Card(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = SurfaceWhite),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Text("Progress Pengisian", style = MaterialTheme.typography.labelMedium, color = TextSecondary, fontWeight = FontWeight.Medium)
-                Text("${(progress * 100).toInt()}%", style = MaterialTheme.typography.labelLarge, color = BrandGold, fontWeight = FontWeight.Bold)
+                Text("Progress Pengisian", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Medium)
+                Text("${(progress * 100).toInt()}%", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
             }
             Spacer(modifier = Modifier.height(8.dp))
             LinearProgressIndicator(
                 progress = { progress },
                 modifier = Modifier.fillMaxWidth().height(8.dp).clip(CircleShape),
-                color = BrandGold,
-                trackColor = BrandGold.copy(alpha = 0.1f)
+                color = MaterialTheme.colorScheme.primary,
+                trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
             )
         }
     }
@@ -573,15 +548,15 @@ private fun SummaryCard(nama: String, program: String, keberangkatan: String, st
     Card(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = BrandGold.copy(alpha = 0.05f)),
-        border = BorderStroke(1.dp, BrandGold.copy(alpha = 0.1f))
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.05f)),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
     ) {
         Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(modifier = Modifier.weight(1f)) {
                 SummaryItem("Nama", nama.ifBlank { "-" })
                 SummaryItem("Program", program.ifBlank { "-" })
             }
-            Box(modifier = Modifier.width(1.dp).height(40.dp).background(BrandGold.copy(alpha = 0.2f)))
+            Box(modifier = Modifier.width(1.dp).height(40.dp).background(MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)))
             Column(modifier = Modifier.weight(1f).padding(start = 16.dp)) {
                 SummaryItem("Berangkat", keberangkatan.ifBlank { "-" })
                 SummaryItem("Status", status, isStatus = true)
@@ -593,12 +568,12 @@ private fun SummaryCard(nama: String, program: String, keberangkatan: String, st
 @Composable
 private fun SummaryItem(label: String, value: String, isStatus: Boolean = false) {
     Column {
-        Text(label, style = MaterialTheme.typography.labelSmall, color = TextMuted)
+        Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f))
         Text(
             text = value,
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.Bold,
-            color = if (isStatus) SuccessGreen else TextPrimary,
+            color = if (isStatus) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurface,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
@@ -647,11 +622,11 @@ private fun PersonalSection(
                 ExposedDropdownMenu(
                     expanded = genderExpanded,
                     onDismissRequest = { onGenderExpandedChange(false) },
-                    modifier = Modifier.background(SurfaceWhite)
+                    modifier = Modifier.background(MaterialTheme.colorScheme.surface)
                 ) {
                     genderOptions.forEach { option ->
                         DropdownMenuItem(
-                            text = { Text(option) },
+                            text = { Text(option, color = MaterialTheme.colorScheme.onSurface) },
                             onClick = { onGenderChange(option); onGenderExpandedChange(false) }
                         )
                     }
@@ -736,37 +711,20 @@ private fun DatePickerField(
         }
     )
 
-    // Pre-fill DatePicker if editing
-    LaunchedEffect(showDatePicker) {
-        if (showDatePicker && value.isNotEmpty()) {
-            try {
-                val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-                val date = sdf.parse(value)
-                date?.let {
-                    datePickerState.selectedDateMillis = it.time
-                }
-            } catch (e: Exception) {
-                android.util.Log.e("DATE", "Error parsing pre-fill date: ${e.message}")
-            }
-        }
-    }
-
     if (showDatePicker) {
-        android.util.Log.d("DATE", "Dialog Opened")
         DatePickerDialog(
             onDismissRequest = { showDatePicker = false },
             confirmButton = {
                 TextButton(onClick = {
                     datePickerState.selectedDateMillis?.let { millis ->
                         val formattedDate = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date(millis))
-                        android.util.Log.d("DATE", "Date Selected = $formattedDate")
                         onDateSelected(formattedDate)
                     }
                     showDatePicker = false
-                }) { Text("Pilih", color = BrandGold) }
+                }) { Text("Pilih", color = MaterialTheme.colorScheme.primary) }
             },
             dismissButton = {
-                TextButton(onClick = { showDatePicker = false }) { Text("Batal") }
+                TextButton(onClick = { showDatePicker = false }) { Text("Batal", color = MaterialTheme.colorScheme.onSurfaceVariant) }
             }
         ) {
             DatePicker(state = datePickerState)
@@ -776,10 +734,7 @@ private fun DatePickerField(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable {
-                android.util.Log.d("DATE", "Field Clicked")
-                showDatePicker = true
-            }
+            .clickable { showDatePicker = true }
     ) {
         OutlinedTextField(
             value = value,
@@ -787,22 +742,22 @@ private fun DatePickerField(
             label = { Text(label) },
             placeholder = { Text("Pilih Tanggal") },
             modifier = Modifier.fillMaxWidth(),
-            leadingIcon = { Icon(Icons.Default.CalendarMonth, null, tint = if (isError) ErrorRed else BrandGold, modifier = Modifier.size(20.dp)) },
+            leadingIcon = { Icon(Icons.Default.CalendarMonth, null, tint = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp)) },
             trailingIcon = {
-                if (value.isNotBlank() && !isError) Icon(Icons.Default.Check, null, tint = SuccessGreen, modifier = Modifier.size(18.dp))
+                if (value.isNotBlank() && !isError) Icon(Icons.Default.Check, null, tint = MaterialTheme.colorScheme.tertiary, modifier = Modifier.size(18.dp))
             },
             isError = isError,
             readOnly = true,
-            enabled = false, // Disable to prevent keyboard and internal focus, Box handles click
+            enabled = false,
             shape = RoundedCornerShape(16.dp),
             colors = OutlinedTextFieldDefaults.colors(
-                disabledTextColor = TextPrimary,
-                disabledBorderColor = if (isError) ErrorRed else Color(0xFFE5E7EB),
-                disabledLabelColor = if (isError) ErrorRed else TextSecondary,
-                disabledLeadingIconColor = if (isError) ErrorRed else BrandGold,
-                disabledPlaceholderColor = TextMuted
+                disabledTextColor = MaterialTheme.colorScheme.onSurface,
+                disabledBorderColor = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+                disabledLabelColor = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+                disabledLeadingIconColor = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+                disabledPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
             ),
-            supportingText = if (isError) { { Text("Wajib diisi", color = ErrorRed) } } else null
+            supportingText = if (isError) { { Text("Wajib diisi", color = MaterialTheme.colorScheme.error) } } else null
         )
     }
 }
@@ -837,7 +792,7 @@ private fun UmrohSection(
                 ExposedDropdownMenu(
                     expanded = programExpanded,
                     onDismissRequest = { onProgramExpandedChange(false) },
-                    modifier = Modifier.background(SurfaceWhite)
+                    modifier = Modifier.background(MaterialTheme.colorScheme.surface)
                 ) {
                     paketOptions.forEach { paket ->
                         val isSoldOut = paket.sisaSeat <= 0
@@ -867,13 +822,13 @@ private fun PackageDropdownItem(paket: com.agunganamiroh.data.model.Paket) {
     
     Row(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
         Column(modifier = Modifier.weight(1f)) {
-            Text(paket.title, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = if (isSoldOut) TextMuted else TextPrimary)
-            Text("${paket.tanggal} • ${paket.durasi}", style = MaterialTheme.typography.labelSmall, color = TextSecondary)
+            Text(paket.title, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = if (isSoldOut) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f) else MaterialTheme.colorScheme.onSurface)
+            Text("${paket.tanggal} • ${paket.durasi}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         Column(horizontalAlignment = Alignment.End) {
-            Text(format.format(paket.harga).replace(",00", ""), style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.ExtraBold, color = if (isSoldOut) TextMuted else BrandGold)
+            Text(format.format(paket.harga).replace(",00", ""), style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.ExtraBold, color = if (isSoldOut) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f) else MaterialTheme.colorScheme.primary)
             if (isSoldOut) {
-                Text("Sold Out", style = MaterialTheme.typography.labelSmall, color = ErrorRed, fontWeight = FontWeight.Bold)
+                Text("Sold Out", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold)
             }
         }
     }
@@ -886,14 +841,14 @@ private fun PackageSummaryCard(paket: com.agunganamiroh.data.model.Paket) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = BrandGold.copy(alpha = 0.05f)),
-        border = BorderStroke(1.dp, BrandGold.copy(alpha = 0.1f))
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.05f)),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
     ) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.Info, null, tint = BrandGold, modifier = Modifier.size(16.dp))
+                Icon(Icons.Default.Info, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Detail Paket Terpilih", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = BrandGold)
+                Text("Detail Paket Terpilih", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
             }
             
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -912,8 +867,8 @@ private fun PackageSummaryCard(paket: com.agunganamiroh.data.model.Paket) {
 @Composable
 private fun SummaryRow(label: String, value: String) {
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-        Text(label, style = MaterialTheme.typography.labelSmall, color = TextSecondary)
-        Text(value, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = TextPrimary)
+        Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(value, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
     }
 }
 
@@ -982,10 +937,10 @@ private fun DocumentCheckboxItem(label: String, checked: Boolean, onCheckedChang
         Checkbox(
             checked = checked,
             onCheckedChange = onCheckedChange,
-            colors = CheckboxDefaults.colors(checkedColor = BrandGold)
+            colors = CheckboxDefaults.colors(checkedColor = MaterialTheme.colorScheme.primary)
         )
         Spacer(modifier = Modifier.width(8.dp))
-        Text(label, style = MaterialTheme.typography.bodyMedium, color = if (checked) TextPrimary else TextSecondary)
+        Text(label, style = MaterialTheme.typography.bodyMedium, color = if (checked) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
@@ -1006,7 +961,7 @@ private fun NotesSection(catatan: String, onCatatanChange: (String) -> Unit) {
 private fun StickySaveButton(isLoading: Boolean, isSuccess: Boolean, isEdit: Boolean, onClick: () -> Unit) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        color = SurfaceWhite,
+        color = MaterialTheme.colorScheme.surface,
         shadowElevation = 8.dp
     ) {
         val interactionSource = remember { MutableInteractionSource() }
@@ -1018,22 +973,22 @@ private fun StickySaveButton(isLoading: Boolean, isSuccess: Boolean, isEdit: Boo
                 onClick = onClick,
                 modifier = Modifier.fillMaxWidth().height(58.dp).scale(scale),
                 shape = RoundedCornerShape(24.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = BrandGold),
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                 enabled = !isLoading && !isSuccess,
                 interactionSource = interactionSource
             ) {
                 if (isLoading) {
-                    CircularProgressIndicator(color = Color.White, modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                    CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
                     Spacer(modifier = Modifier.width(12.dp))
-                    Text(if (isEdit) "Memperbarui..." else "Menyimpan...", fontWeight = FontWeight.Bold)
+                    Text(if (isEdit) "Memperbarui..." else "Menyimpan...", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimary)
                 } else if (isSuccess) {
-                    Icon(Icons.Default.CheckCircle, null, modifier = Modifier.size(24.dp))
+                    Icon(Icons.Default.CheckCircle, null, modifier = Modifier.size(24.dp), tint = MaterialTheme.colorScheme.onPrimary)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text(if (isEdit) "Berhasil Diperbarui" else "Berhasil Disimpan", fontWeight = FontWeight.Bold)
+                    Text(if (isEdit) "Berhasil Diperbarui" else "Berhasil Disimpan", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimary)
                 } else {
-                    Icon(if (isEdit) Icons.Default.Update else Icons.Default.Save, null, modifier = Modifier.size(20.dp))
+                    Icon(if (isEdit) Icons.Default.Update else Icons.Default.Save, null, modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.onPrimary)
                     Spacer(modifier = Modifier.width(10.dp))
-                    Text(if (isEdit) "UPDATE DATA JAMAAH" else "SIMPAN DATA JAMAAH", fontWeight = FontWeight.ExtraBold, letterSpacing = 1.sp)
+                    Text(if (isEdit) "UPDATE DATA JAMAAH" else "SIMPAN DATA JAMAAH", fontWeight = FontWeight.ExtraBold, letterSpacing = 1.sp, color = MaterialTheme.colorScheme.onPrimary)
                 }
             }
         }
@@ -1062,10 +1017,10 @@ private fun EnterpriseTextField(
             label = { Text(label) },
             placeholder = { Text(placeholder) },
             modifier = Modifier.fillMaxWidth(),
-            leadingIcon = { Icon(leadingIcon, null, tint = if (isError) ErrorRed else BrandGold, modifier = Modifier.size(20.dp)) },
+            leadingIcon = { Icon(leadingIcon, null, tint = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp)) },
             trailingIcon = {
                 if (trailingIcon != null) trailingIcon()
-                else if (value.isNotBlank() && !isError) Icon(Icons.Default.Check, null, tint = SuccessGreen, modifier = Modifier.size(18.dp))
+                else if (value.isNotBlank() && !isError) Icon(Icons.Default.Check, null, tint = MaterialTheme.colorScheme.tertiary, modifier = Modifier.size(18.dp))
             },
             isError = isError,
             readOnly = readOnly,
@@ -1074,28 +1029,14 @@ private fun EnterpriseTextField(
             keyboardActions = keyboardActions,
             shape = RoundedCornerShape(16.dp),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = BrandGold,
-                focusedLabelColor = BrandGold,
-                cursorColor = BrandGold,
-                unfocusedBorderColor = Color(0xFFE5E7EB),
-                errorBorderColor = ErrorRed
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                focusedLabelColor = MaterialTheme.colorScheme.primary,
+                cursorColor = MaterialTheme.colorScheme.primary,
+                unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+                errorBorderColor = MaterialTheme.colorScheme.error
             ),
-            supportingText = if (isError) { { Text("Wajib diisi dengan benar", color = ErrorRed) } } else null
+            supportingText = if (isError) { { Text("Wajib diisi dengan benar", color = MaterialTheme.colorScheme.error) } } else null
         )
-        
-        // Transparent overlay to capture clicks if readOnly
-        if (readOnly) {
-            Box(
-                modifier = Modifier
-                    .matchParentSize()
-                    .alpha(0f)
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null,
-                        onClick = { /* The modifier on EnterpriseTextField will handle this */ }
-                    )
-            )
-        }
     }
 }
 
@@ -1108,21 +1049,21 @@ private fun SectionCard(
 ) {
     Column(modifier = Modifier.padding(horizontal = 20.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(modifier = Modifier.size(32.dp).clip(CircleShape).background(BrandGold.copy(alpha = 0.1f)), contentAlignment = Alignment.Center) {
-                Icon(icon, null, tint = BrandGold, modifier = Modifier.size(16.dp))
+            Box(modifier = Modifier.size(32.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)), contentAlignment = Alignment.Center) {
+                Icon(icon, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
             }
             Spacer(modifier = Modifier.width(12.dp))
             Column {
-                Text(title, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = BrandGold, letterSpacing = 1.sp)
-                Text(description, style = MaterialTheme.typography.labelSmall, color = TextMuted)
+                Text(title, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, letterSpacing = 1.sp)
+                Text(description, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f))
             }
         }
         Spacer(modifier = Modifier.height(16.dp))
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = SurfaceWhite),
-            border = BorderStroke(1.dp, Color(0xFFF3F4F6))
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.1f))
         ) {
             Box(modifier = Modifier.padding(20.dp)) {
                 content()
@@ -1133,7 +1074,10 @@ private fun SectionCard(
 
 @Composable
 private fun IslamicPatternOverlay() {
-    Canvas(modifier = Modifier.fillMaxSize().alpha(0.04f)) {
+    val patternColor = MaterialTheme.colorScheme.primary
+    val backgroundColor = MaterialTheme.colorScheme.background
+    val opacity = if (backgroundColor.luminance() < 0.5f) 0.06f else 0.04f
+    Canvas(modifier = Modifier.fillMaxSize().alpha(opacity)) {
         val sizePx = 60.dp.toPx()
         for (x in 0..(size.width / sizePx).toInt()) {
             for (y in 0..(size.height / sizePx).toInt()) {
@@ -1151,7 +1095,7 @@ private fun IslamicPatternOverlay() {
                         lineTo(cx - sizePx * 0.12f, cy - sizePx * 0.12f)
                         close()
                     },
-                    color = BrandGold,
+                    color = patternColor,
                     style = Stroke(width = 1.dp.toPx())
                 )
             }

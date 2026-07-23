@@ -23,6 +23,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -37,19 +38,6 @@ import com.agunganamiroh.viewmodel.JamaahViewModel
 import java.text.NumberFormat
 import java.util.*
 
-// = ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-// PREMIUM THEME COLORS (Consistent with Dashboard & Input)
-// :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-private val BrandGold = Color(0xFFC89B3C)
-private val AppBackground = Color(0xFFFAF8F5)
-private val SurfaceWhite = Color(0xFFFFFFFF)
-private val TextPrimary = Color(0xFF1F1F1F)
-private val TextSecondary = Color(0xFF6B7280)
-private val TextMuted = Color(0xFF9CA3AF)
-private val SuccessGreen = Color(0xFF22C55E)
-private val WarningAmber = Color(0xFFF59E0B)
-private val ErrorRed = Color(0xFFEF4444)
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DataJamaahScreen(
@@ -58,19 +46,18 @@ fun DataJamaahScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     
-    Box(modifier = Modifier.fillMaxSize().background(AppBackground)) {
-        // Islamic Background Pattern
+    Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         IslamicPatternOverlay()
 
         Scaffold(
             topBar = {
                 CenterAlignedTopAppBar(
                     title = { 
-                        Text("Daftar Jamaah Saya", fontWeight = FontWeight.ExtraBold, color = BrandGold) 
+                        Text("Daftar Jamaah Saya", fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.primary) 
                     },
                     navigationIcon = {
                         IconButton(onClick = { navController.popBackStack() }) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = BrandGold)
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = MaterialTheme.colorScheme.primary)
                         }
                     },
                     colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent)
@@ -133,14 +120,14 @@ private fun SearchAndFilterSection(
             onValueChange = onQueryChange,
             modifier = Modifier.fillMaxWidth(),
             placeholder = { Text("Cari Nama / No. HP / Paspor...", fontSize = 14.sp) },
-            leadingIcon = { Icon(Icons.Default.Search, null, tint = BrandGold) },
+            leadingIcon = { Icon(Icons.Default.Search, null, tint = MaterialTheme.colorScheme.primary) },
             shape = RoundedCornerShape(16.dp),
             singleLine = true,
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = BrandGold,
-                unfocusedBorderColor = Color.LightGray,
-                focusedContainerColor = SurfaceWhite,
-                unfocusedContainerColor = SurfaceWhite
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surface
             )
         )
 
@@ -156,11 +143,12 @@ private fun SearchAndFilterSection(
                     onClick = { onFilterChange(filter) },
                     label = { Text(filter, fontSize = 12.sp) },
                     colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = BrandGold,
-                        selectedLabelColor = Color.White
+                        selectedContainerColor = MaterialTheme.colorScheme.primary,
+                        selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                        labelColor = MaterialTheme.colorScheme.onSurfaceVariant
                     ),
                     border = FilterChipDefaults.filterChipBorder(
-                        borderColor = BrandGold.copy(alpha = 0.3f),
+                        borderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
                         enabled = true,
                         selected = selectedFilter == filter
                     ),
@@ -203,7 +191,7 @@ private fun JamaahCard(
             .fillMaxWidth()
             .clickable { onClick() },
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = SurfaceWhite),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -216,13 +204,13 @@ private fun JamaahCard(
                     modifier = Modifier
                         .size(48.dp)
                         .clip(CircleShape)
-                        .background(BrandGold.copy(alpha = 0.1f)),
+                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = if (jamaah.gender.contains("Perempuan", true)) Icons.Default.Woman else Icons.Default.Man,
                         contentDescription = null,
-                        tint = BrandGold
+                        tint = MaterialTheme.colorScheme.primary
                     )
                 }
 
@@ -233,14 +221,14 @@ private fun JamaahCard(
                         text = jamaah.nama,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = TextPrimary,
+                        color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
                     Text(
                         text = jamaah.program,
                         style = MaterialTheme.typography.labelSmall,
-                        color = TextSecondary
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 
@@ -250,7 +238,7 @@ private fun JamaahCard(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            HorizontalDivider(color = AppBackground)
+            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f))
 
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -261,15 +249,15 @@ private fun JamaahCard(
             ) {
                 // Info Items
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Phone, null, modifier = Modifier.size(14.dp), tint = TextMuted)
+                    Icon(Icons.Default.Phone, null, modifier = Modifier.size(14.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text(jamaah.noHp, style = MaterialTheme.typography.labelMedium, color = TextSecondary)
+                    Text(jamaah.noHp, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.CalendarMonth, null, modifier = Modifier.size(14.dp), tint = TextMuted)
+                    Icon(Icons.Default.CalendarMonth, null, modifier = Modifier.size(14.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text(jamaah.keberangkatan, style = MaterialTheme.typography.labelMedium, color = TextSecondary)
+                    Text(jamaah.keberangkatan, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
 
@@ -288,11 +276,11 @@ private fun JamaahCard(
                     text = "DP: $formattedDp",
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.ExtraBold,
-                    color = BrandGold
+                    color = MaterialTheme.colorScheme.primary
                 )
 
                 if (jamaah.pelunasan) {
-                    Icon(Icons.Default.Verified, "Lunas", tint = SuccessGreen, modifier = Modifier.size(18.dp))
+                    Icon(Icons.Default.Verified, "Lunas", tint = MaterialTheme.colorScheme.tertiary, modifier = Modifier.size(18.dp))
                 }
             }
         }
@@ -302,10 +290,10 @@ private fun JamaahCard(
 @Composable
 private fun StatusBadge(status: String) {
     val color = when (status.lowercase()) {
-        "pending" -> WarningAmber
-        "approved", "verified" -> SuccessGreen
-        "rejected" -> ErrorRed
-        else -> BrandGold
+        "pending" -> MaterialTheme.colorScheme.secondary
+        "approved", "verified" -> MaterialTheme.colorScheme.tertiary
+        "rejected" -> MaterialTheme.colorScheme.error
+        else -> MaterialTheme.colorScheme.primary
     }
 
     Surface(
@@ -326,9 +314,9 @@ private fun StatusBadge(status: String) {
 private fun LoadingState() {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            CircularProgressIndicator(color = BrandGold)
+            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
             Spacer(modifier = Modifier.height(16.dp))
-            Text("Memuat data jamaah...", color = TextSecondary, style = MaterialTheme.typography.bodyMedium)
+            Text("Memuat data jamaah...", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
         }
     }
 }
@@ -341,20 +329,20 @@ private fun EmptyState() {
                 imageVector = Icons.Default.SearchOff,
                 contentDescription = null,
                 modifier = Modifier.size(80.dp),
-                tint = BrandGold.copy(alpha = 0.2f)
+                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
             )
             Spacer(modifier = Modifier.height(16.dp))
             Text(
                 "Tidak Ada Data Jamaah",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = TextPrimary
+                color = MaterialTheme.colorScheme.onSurface
             )
             Text(
                 "Data jamaah yang Anda cari tidak ditemukan atau belum ada pendaftaran.",
                 textAlign = TextAlign.Center,
                 style = MaterialTheme.typography.bodySmall,
-                color = TextSecondary
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -362,7 +350,10 @@ private fun EmptyState() {
 
 @Composable
 private fun IslamicPatternOverlay() {
-    Canvas(modifier = Modifier.fillMaxSize().alpha(0.04f)) {
+    val patternColor = MaterialTheme.colorScheme.primary
+    val backgroundColor = MaterialTheme.colorScheme.background
+    val opacity = if (backgroundColor.luminance() < 0.5f) 0.06f else 0.04f
+    Canvas(modifier = Modifier.fillMaxSize().alpha(opacity)) {
         val sizePx = 60.dp.toPx()
         for (x in 0..(size.width / sizePx).toInt()) {
             for (y in 0..(size.height / sizePx).toInt()) {
@@ -380,7 +371,7 @@ private fun IslamicPatternOverlay() {
                         lineTo(cx - sizePx * 0.12f, cy - sizePx * 0.12f)
                         close()
                     },
-                    color = BrandGold,
+                    color = patternColor,
                     style = Stroke(width = 1.dp.toPx())
                 )
             }

@@ -36,37 +36,28 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.agunganamiroh.data.model.User
+import com.agunganamiroh.ui.theme.ThemeMode
 import com.agunganamiroh.viewmodel.ProfileViewModel
+import com.agunganamiroh.viewmodel.ThemeViewModel
 import com.google.firebase.Timestamp
 import java.text.SimpleDateFormat
 import java.util.*
-
-// ============================================================
-// PREMIUM THEME COLORS
-// ============================================================
-private val BrandGold = Color(0xFFC89B3C)
-private val BrandGoldLight = Color(0xFFF7E9B6)
-private val AppBackground = Color(0xFFFAF8F5)
-private val SurfaceWhite = Color(0xFFFFFFFF)
-private val TextPrimary = Color(0xFF1F1F1F)
-private val TextSecondary = Color(0xFF6B7280)
-private val TextMuted = Color(0xFF9CA3AF)
-private val SuccessGreen = Color(0xFF22C55E)
-private val WarningAmber = Color(0xFFF59E0B)
-private val ErrorRed = Color(0xFFEF4444)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AgentProfileScreen(
     navController: NavController,
-    viewModel: ProfileViewModel = viewModel()
+    viewModel: ProfileViewModel = viewModel(),
+    themeViewModel: ThemeViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val themeMode by themeViewModel.themeMode.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
 
     var showEditDialog by remember { mutableStateOf(false) }
     var showPasswordDialog by remember { mutableStateOf(false) }
     var showLogoutDialog by remember { mutableStateOf(false) }
+    var showThemeDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(uiState.error) {
         uiState.error?.let {
@@ -107,26 +98,26 @@ fun AgentProfileScreen(
                         "Profil Agent", 
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = BrandGold
+                        color = MaterialTheme.colorScheme.primary
                     ) 
                 },
                 navigationIcon = {
                     IconButton(onClick = { navController.navigateUp() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = BrandGold)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = MaterialTheme.colorScheme.primary)
                     }
                 },
                 actions = {
                     IconButton(onClick = { /* Notification */ }) {
-                        Icon(Icons.Default.Notifications, contentDescription = "Notification", tint = BrandGold)
+                        Icon(Icons.Default.Notifications, contentDescription = "Notification", tint = MaterialTheme.colorScheme.primary)
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                     containerColor = Color.Transparent,
-                    scrolledContainerColor = SurfaceWhite
+                    scrolledContainerColor = MaterialTheme.colorScheme.surface
                 )
             )
         },
-        containerColor = AppBackground,
+        containerColor = MaterialTheme.colorScheme.background,
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
         LazyColumn(
@@ -152,6 +143,13 @@ fun AgentProfileScreen(
             }
 
             item {
+                AppearanceSection(
+                    currentTheme = themeMode,
+                    onThemeClick = { showThemeDialog = true }
+                )
+            }
+
+            item {
                 SettingsSection(
                     onEditProfile = { showEditDialog = true },
                     onChangePassword = { showPasswordDialog = true }
@@ -163,7 +161,7 @@ fun AgentProfileScreen(
             }
         }
 
-        // Dialogs (unchanged business logic)
+        // Dialogs
         if (showEditDialog) {
             EditProfileDialog(
                 user = uiState.user,
@@ -190,9 +188,20 @@ fun AgentProfileScreen(
             )
         }
 
+        if (showThemeDialog) {
+            ThemeSelectionDialog(
+                currentTheme = themeMode,
+                onDismiss = { showThemeDialog = false },
+                onSelect = { 
+                    themeViewModel.setThemeMode(it)
+                    showThemeDialog = false
+                }
+            )
+        }
+
         if (uiState.isLoading) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = BrandGold)
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
             }
         }
     }
@@ -208,7 +217,7 @@ private fun ProfileHeader(
             .fillMaxWidth()
             .padding(horizontal = 20.dp),
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = SurfaceWhite),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Box(
@@ -216,7 +225,7 @@ private fun ProfileHeader(
                 .fillMaxWidth()
                 .background(
                     brush = Brush.verticalGradient(
-                        colors = listOf(BrandGold.copy(alpha = 0.05f), SurfaceWhite)
+                        colors = listOf(MaterialTheme.colorScheme.primary.copy(alpha = 0.05f), MaterialTheme.colorScheme.surface)
                     )
                 )
                 .padding(24.dp)
@@ -230,14 +239,14 @@ private fun ProfileHeader(
                         modifier = Modifier
                             .size(100.dp)
                             .clip(CircleShape)
-                            .background(BrandGold.copy(alpha = 0.1f)),
+                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             Icons.Default.Person,
                             contentDescription = null,
                             modifier = Modifier.size(60.dp),
-                            tint = BrandGold
+                            tint = MaterialTheme.colorScheme.primary
                         )
                     }
                     Surface(
@@ -245,13 +254,13 @@ private fun ProfileHeader(
                             .size(32.dp)
                             .clip(CircleShape)
                             .clickable { onEditPhoto() },
-                        color = BrandGold,
+                        color = MaterialTheme.colorScheme.primary,
                         tonalElevation = 4.dp
                     ) {
                         Icon(
                             Icons.Default.CameraAlt,
                             contentDescription = "Edit Photo",
-                            tint = Color.White,
+                            tint = MaterialTheme.colorScheme.onPrimary,
                             modifier = Modifier.padding(6.dp)
                         )
                     }
@@ -263,7 +272,7 @@ private fun ProfileHeader(
                     text = user?.fullName ?: user?.companyName ?: "-",
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
-                    color = TextPrimary,
+                    color = MaterialTheme.colorScheme.onSurface,
                     textAlign = TextAlign.Center
                 )
 
@@ -274,13 +283,13 @@ private fun ProfileHeader(
                 ) {
                     Surface(
                         shape = RoundedCornerShape(8.dp),
-                        color = BrandGold.copy(alpha = 0.1f)
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
                     ) {
                         Text(
                             text = (user?.role ?: "AGENT").uppercase(),
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
                             style = MaterialTheme.typography.labelMedium,
-                            color = BrandGold,
+                            color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.Bold
                         )
                     }
@@ -289,7 +298,7 @@ private fun ProfileHeader(
                 Text(
                     text = "${user?.companyName ?: "Agung Anamiroh"} • ${user?.branch ?: "-"}",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = TextSecondary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -298,8 +307,6 @@ private fun ProfileHeader(
 
 @Composable
 private fun ProfileStatistics(user: User?) {
-    // Placeholder statistics as they are not currently in the User model
-    // But designed to match the Dashboard requirements
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -308,7 +315,7 @@ private fun ProfileStatistics(user: User?) {
     ) {
         StatMiniCard(
             label = "Jamaah",
-            value = "0", // Derived count would go here
+            value = "0",
             icon = Icons.Default.Group,
             modifier = Modifier.weight(1f)
         )
@@ -334,17 +341,17 @@ private fun StatMiniCard(label: String, value: String, icon: ImageVector, modifi
     Card(
         modifier = modifier,
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = SurfaceWhite),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Column(
             modifier = Modifier.padding(12.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Icon(icon, null, tint = BrandGold, modifier = Modifier.size(16.dp))
+            Icon(icon, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
             Spacer(modifier = Modifier.height(4.dp))
-            Text(text = value, fontWeight = FontWeight.ExtraBold, style = MaterialTheme.typography.titleMedium, color = TextPrimary)
-            Text(text = label, style = MaterialTheme.typography.labelSmall, color = TextMuted)
+            Text(text = value, fontWeight = FontWeight.ExtraBold, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
+            Text(text = label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f))
         }
     }
 }
@@ -359,27 +366,27 @@ private fun InformationSection(user: User?) {
             text = "Informasi Akun",
             style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.Bold,
-            color = BrandGold,
+            color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.padding(horizontal = 4.dp)
         )
         Card(
             shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(containerColor = SurfaceWhite),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
         ) {
             Column(modifier = Modifier.padding(8.dp)) {
                 InformationItem(icon = Icons.Default.Email, title = "Email", value = user?.email ?: "-")
-                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = AppBackground)
+                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
                 InformationItem(icon = Icons.Default.Phone, title = "Nomor HP", value = user?.phoneNumber ?: "-")
-                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = AppBackground)
+                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
                 InformationItem(icon = Icons.Default.LocationOn, title = "Cabang", value = user?.branch ?: "-")
-                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = AppBackground)
+                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
                 InformationItem(
                     icon = Icons.Default.CalendarMonth, 
                     title = "Bergabung", 
                     value = formatTimestamp(user?.createdAt)
                 )
-                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = AppBackground)
+                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
                 InformationItem(
                     icon = Icons.Default.History, 
                     title = "Terakhir Login", 
@@ -402,18 +409,52 @@ private fun InformationItem(icon: ImageVector, title: String, value: String) {
             modifier = Modifier
                 .size(36.dp)
                 .clip(CircleShape)
-                .background(BrandGold.copy(alpha = 0.05f)),
+                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.05f)),
             contentAlignment = Alignment.Center
         ) {
-            Icon(icon, null, tint = BrandGold, modifier = Modifier.size(18.dp))
+            Icon(icon, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
         }
         Spacer(modifier = Modifier.width(16.dp))
         Column {
-            Text(text = title, style = MaterialTheme.typography.labelSmall, color = TextMuted)
-            Text(text = value, style = MaterialTheme.typography.bodyMedium, color = TextPrimary, fontWeight = FontWeight.Medium)
+            Text(text = title, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f))
+            Text(text = value, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Medium)
         }
         Spacer(modifier = Modifier.weight(1f))
-        Icon(Icons.Default.ChevronRight, null, tint = TextMuted.copy(alpha = 0.5f), modifier = Modifier.size(16.dp))
+        Icon(Icons.Default.ChevronRight, null, tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f), modifier = Modifier.size(16.dp))
+    }
+}
+
+@Composable
+private fun AppearanceSection(currentTheme: ThemeMode, onThemeClick: () -> Unit) {
+    Column(
+        modifier = Modifier.padding(horizontal = 20.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Text(
+            text = "Tampilan",
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(horizontal = 4.dp)
+        )
+        Card(
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        ) {
+            Column(modifier = Modifier.padding(8.dp)) {
+                SettingsItem(
+                    icon = Icons.Default.Palette, 
+                    title = "Tema Aplikasi", 
+                    subtitle = when(currentTheme) {
+                        ThemeMode.LIGHT -> "Terang"
+                        ThemeMode.DARK -> "Gelap"
+                        ThemeMode.SYSTEM -> "Ikuti Sistem"
+                    },
+                    onClick = onThemeClick
+                )
+            }
+        }
     }
 }
 
@@ -430,33 +471,31 @@ private fun SettingsSection(
             text = "Pengaturan",
             style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.Bold,
-            color = BrandGold,
+            color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.padding(horizontal = 4.dp)
         )
         Card(
             shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(containerColor = SurfaceWhite),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
         ) {
             Column(modifier = Modifier.padding(8.dp)) {
                 SettingsItem(icon = Icons.Default.Edit, title = "Edit Profil", onClick = onEditProfile)
-                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = AppBackground)
+                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
                 SettingsItem(icon = Icons.Default.Lock, title = "Ganti Password", onClick = onChangePassword)
-                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = AppBackground)
+                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
                 SettingsItem(icon = Icons.Default.Notifications, title = "Notifikasi", onClick = { /* TODO */ })
-                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = AppBackground)
+                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
                 SettingsItem(icon = Icons.Default.Language, title = "Bahasa", onClick = { /* TODO */ })
-                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = AppBackground)
+                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
                 SettingsItem(icon = Icons.Default.Info, title = "Tentang Aplikasi", onClick = { /* TODO */ })
-                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = AppBackground)
-                SettingsItem(icon = Icons.Default.PrivacyTip, title = "Kebijakan Privasi", onClick = { /* TODO */ })
             }
         }
     }
 }
 
 @Composable
-private fun SettingsItem(icon: ImageVector, title: String, onClick: () -> Unit) {
+private fun SettingsItem(icon: ImageVector, title: String, subtitle: String? = null, onClick: () -> Unit) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val scale by animateFloatAsState(if (isPressed) 0.98f else 1f, tween(120), label = "")
@@ -469,11 +508,16 @@ private fun SettingsItem(icon: ImageVector, title: String, onClick: () -> Unit) 
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(icon, null, tint = BrandGold, modifier = Modifier.size(20.dp))
+        Icon(icon, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
         Spacer(modifier = Modifier.width(16.dp))
-        Text(text = title, style = MaterialTheme.typography.bodyMedium, color = TextPrimary, fontWeight = FontWeight.Medium)
+        Column {
+            Text(text = title, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Medium)
+            if (subtitle != null) {
+                Text(text = subtitle, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
         Spacer(modifier = Modifier.weight(1f))
-        Icon(Icons.Default.ChevronRight, null, tint = TextMuted, modifier = Modifier.size(16.dp))
+        Icon(Icons.Default.ChevronRight, null, tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f), modifier = Modifier.size(16.dp))
     }
 }
 
@@ -484,7 +528,7 @@ private fun DangerZone(onLogout: () -> Unit) {
             .fillMaxWidth()
             .padding(horizontal = 20.dp),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = ErrorRed.copy(alpha = 0.05f)),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.error.copy(alpha = 0.05f)),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
@@ -494,9 +538,9 @@ private fun DangerZone(onLogout: () -> Unit) {
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(Icons.AutoMirrored.Filled.Logout, null, tint = ErrorRed, modifier = Modifier.size(20.dp))
+            Icon(Icons.AutoMirrored.Filled.Logout, null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(20.dp))
             Spacer(modifier = Modifier.width(16.dp))
-            Text(text = "Logout Akun", style = MaterialTheme.typography.bodyMedium, color = ErrorRed, fontWeight = FontWeight.Bold)
+            Text(text = "Logout Akun", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -528,7 +572,7 @@ private fun EditProfileDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Edit Profil", color = BrandGold, fontWeight = FontWeight.Bold) },
+        title = { Text("Edit Profil", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(
@@ -537,7 +581,7 @@ private fun EditProfileDialog(
                     label = { Text("Nama Lengkap") },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
-                    colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = BrandGold, focusedLabelColor = BrandGold)
+                    colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = MaterialTheme.colorScheme.primary, focusedLabelColor = MaterialTheme.colorScheme.primary)
                 )
                 OutlinedTextField(
                     value = phone,
@@ -545,7 +589,7 @@ private fun EditProfileDialog(
                     label = { Text("Nomor Telepon") },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
-                    colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = BrandGold, focusedLabelColor = BrandGold)
+                    colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = MaterialTheme.colorScheme.primary, focusedLabelColor = MaterialTheme.colorScheme.primary)
                 )
                 OutlinedTextField(
                     value = branch,
@@ -553,25 +597,25 @@ private fun EditProfileDialog(
                     label = { Text("Cabang") },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
-                    colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = BrandGold, focusedLabelColor = BrandGold)
+                    colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = MaterialTheme.colorScheme.primary, focusedLabelColor = MaterialTheme.colorScheme.primary)
                 )
             }
         },
         confirmButton = {
             Button(
                 onClick = { onSave(name, phone, branch) },
-                colors = ButtonDefaults.buttonColors(containerColor = BrandGold),
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Text("Simpan Perubahan")
+                Text("Simpan Perubahan", color = MaterialTheme.colorScheme.onPrimary)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Batal", color = TextSecondary)
+                Text("Batal", color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         },
-        containerColor = SurfaceWhite
+        containerColor = MaterialTheme.colorScheme.surface
     )
 }
 
@@ -588,7 +632,7 @@ private fun ChangePasswordDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Ganti Password", color = BrandGold, fontWeight = FontWeight.Bold) },
+        title = { Text("Ganti Password", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(
@@ -598,7 +642,7 @@ private fun ChangePasswordDialog(
                     visualTransformation = PasswordVisualTransformation(),
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
-                    colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = BrandGold, focusedLabelColor = BrandGold)
+                    colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = MaterialTheme.colorScheme.primary, focusedLabelColor = MaterialTheme.colorScheme.primary)
                 )
                 OutlinedTextField(
                     value = newPass,
@@ -607,7 +651,7 @@ private fun ChangePasswordDialog(
                     visualTransformation = PasswordVisualTransformation(),
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
-                    colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = BrandGold, focusedLabelColor = BrandGold)
+                    colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = MaterialTheme.colorScheme.primary, focusedLabelColor = MaterialTheme.colorScheme.primary)
                 )
                 OutlinedTextField(
                     value = confirmPass,
@@ -616,10 +660,10 @@ private fun ChangePasswordDialog(
                     visualTransformation = PasswordVisualTransformation(),
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
-                    colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = BrandGold, focusedLabelColor = BrandGold)
+                    colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = MaterialTheme.colorScheme.primary, focusedLabelColor = MaterialTheme.colorScheme.primary)
                 )
                 if (error != null) {
-                    Text(error!!, color = ErrorRed, style = MaterialTheme.typography.labelSmall)
+                    Text(error!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.labelSmall)
                 }
             }
         },
@@ -634,19 +678,64 @@ private fun ChangePasswordDialog(
                         onSave(oldPass, newPass)
                     }
                 },
-                colors = ButtonDefaults.buttonColors(containerColor = BrandGold),
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Text("Update Password")
+                Text("Update Password", color = MaterialTheme.colorScheme.onPrimary)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Batal", color = TextSecondary)
+                Text("Batal", color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         },
-        containerColor = SurfaceWhite
+        containerColor = MaterialTheme.colorScheme.surface
     )
+}
+
+@Composable
+private fun ThemeSelectionDialog(
+    currentTheme: ThemeMode,
+    onDismiss: () -> Unit,
+    onSelect: (ThemeMode) -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Pilih Tema", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold) },
+        text = {
+            Column {
+                ThemeOption("Terang", ThemeMode.LIGHT, currentTheme == ThemeMode.LIGHT, onSelect)
+                ThemeOption("Gelap", ThemeMode.DARK, currentTheme == ThemeMode.DARK, onSelect)
+                ThemeOption("Ikuti Sistem", ThemeMode.SYSTEM, currentTheme == ThemeMode.SYSTEM, onSelect)
+            }
+        },
+        confirmButton = {},
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Tutup", color = MaterialTheme.colorScheme.primary)
+            }
+        },
+        containerColor = MaterialTheme.colorScheme.surface
+    )
+}
+
+@Composable
+private fun ThemeOption(label: String, mode: ThemeMode, selected: Boolean, onSelect: (ThemeMode) -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onSelect(mode) }
+            .padding(vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        RadioButton(
+            selected = selected,
+            onClick = { onSelect(mode) },
+            colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colorScheme.primary)
+        )
+        Spacer(modifier = Modifier.width(12.dp))
+        Text(text = label, color = MaterialTheme.colorScheme.onSurface)
+    }
 }
 
 @Composable
@@ -656,22 +745,22 @@ private fun LogoutConfirmDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Konfirmasi Logout") },
-        text = { Text("Apakah Anda yakin ingin keluar dari akun ini?") },
+        title = { Text("Konfirmasi Logout", color = MaterialTheme.colorScheme.onSurface) },
+        text = { Text("Apakah Anda yakin ingin keluar dari akun ini?", color = MaterialTheme.colorScheme.onSurfaceVariant) },
         confirmButton = {
             Button(
                 onClick = onConfirm,
-                colors = ButtonDefaults.buttonColors(containerColor = ErrorRed),
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Text("Logout")
+                Text("Logout", color = MaterialTheme.colorScheme.onError)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Batal")
+                Text("Batal", color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         },
-        containerColor = SurfaceWhite
+        containerColor = MaterialTheme.colorScheme.surface
     )
 }
