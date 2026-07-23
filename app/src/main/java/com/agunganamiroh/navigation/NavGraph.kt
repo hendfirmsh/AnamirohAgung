@@ -9,6 +9,8 @@ import com.agunganamiroh.ui.screen.agent.AgentProfileScreen
 import com.agunganamiroh.ui.screen.agent.InputJamaahScreen
 import com.agunganamiroh.ui.screen.agent.DataJamaahScreen
 import com.agunganamiroh.ui.screen.agent.DetailJamaahScreen
+import com.agunganamiroh.ui.screen.agent.AgentMainScaffold
+import com.agunganamiroh.ui.screen.agent.AgentHistoryScreen
 import androidx.navigation.navArgument
 import androidx.navigation.NavType
 
@@ -42,7 +44,7 @@ fun NavGraph() {
 
                         "agent" -> {
                             navController.navigate(
-                                "agent_dashboard"
+                                Screen.AgentMain.route
                             ) {
                                 popUpTo("login") {
                                     inclusive = true
@@ -58,14 +60,12 @@ fun NavGraph() {
             AdminDashboardScreen()
         }
 
-        composable(route = "agent_dashboard") {
-            AgentDashboardScreen(
-                navController = navController
-            )
+        composable(route = Screen.AgentMain.route) {
+            AgentMainScaffold(navController = navController)
         }
 
-        composable(route = "profil_agent") {
-            AgentProfileScreen(
+        composable(route = "data_jamaah") {
+            DataJamaahScreen(
                 navController = navController
             )
         }
@@ -79,12 +79,6 @@ fun NavGraph() {
             })
         ) {
             InputJamaahScreen(
-                navController = navController
-            )
-        }
-
-        composable(route = "data_jamaah") {
-            DataJamaahScreen(
                 navController = navController
             )
         }

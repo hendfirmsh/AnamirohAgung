@@ -210,14 +210,10 @@ fun AgentDashboardScreen(
                     }
 
                     item {
-                        QuickActionSection(
-                            actions = quickActions,
-                            onActionClick = { route -> navController.navigate(route) }
+                        MenuSection(
+                            menuItems = menuItems,
+                            onMenuClick = { route -> navController.navigate(route) }
                         )
-                    }
-
-                    item {
-                        StatisticsSection(stats = stats, isLoading = jamaahState.loading)
                     }
 
                     item {
@@ -232,16 +228,13 @@ fun AgentDashboardScreen(
                     }
 
                     item {
-                        ActivitySection(
-                            activities = jamaahState.activities,
-                            isLoading = jamaahState.loading
-                        )
+                        StatisticsSection(stats = stats, isLoading = jamaahState.loading)
                     }
 
                     item {
-                        MenuSection(
-                            menuItems = menuItems,
-                            onMenuClick = { route -> navController.navigate(route) }
+                        ActivitySection(
+                            activities = jamaahState.activities,
+                            isLoading = jamaahState.loading
                         )
                     }
                 }
