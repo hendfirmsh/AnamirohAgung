@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Stylized representation of the Anamiroh logo calligraphy for monochrome theme -->
+    <path
+        android:fillColor="#000000"
+        android:pathData="M54,20 C45,20 38,25 35,32 C30,32 25,35 22,40 C25,38 30,35 35,35 C38,28 45,25 54,25 C65,25 72,32 72,42 C72,55 60,65 54,75 C48,65 36,55 36,42 L42,42 C42,50 50,60 54,68 C58,60 66,50 66,42 C66,35 60,30 54,30 Z M54,15 L56,18 L54,21 L52,18 Z" />
+</vector>
