@@ -36,6 +36,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -54,21 +55,6 @@ import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-
-// ============================================================
-// ENTERPRISE THEME COLORS
-// ============================================================
-private val BrandGold = Color(0xFFC89B3C)
-private val BrandGoldLight = Color(0xFFF7E9B6)
-private val AppBackground = Color(0xFFFAF8F5)
-private val SurfaceWhite = Color(0xFFFFFFFF)
-private val TextPrimary = Color(0xFF1F1F1F)
-private val TextSecondary = Color(0xFF6B7280)
-private val TextMuted = Color(0xFF9CA3AF)
-private val SuccessGreen = Color(0xFF22C55E)
-private val WarningAmber = Color(0xFFF59E0B)
-private val ErrorRed = Color(0xFFEF4444)
-private val InfoBlue = Color(0xFF3B82F6)
 
 // ============================================================
 // UI MODELS
@@ -115,6 +101,11 @@ fun AgentDashboardScreen(
 
     val agentName = authState.user?.companyName ?: "Agent Anamiroh"
     
+    val primaryColor = MaterialTheme.colorScheme.primary
+    val warningColor = MaterialTheme.colorScheme.secondary
+    val successColor = MaterialTheme.colorScheme.tertiary
+    val infoColor = MaterialTheme.colorScheme.primary // Fallback for info blue if not defined
+    
     LaunchedEffect(authState.user?.email) {
         authState.user?.email?.let { email ->
             jamaahViewModel.loadJamaahByAgent(email)
@@ -128,7 +119,7 @@ fun AgentDashboardScreen(
     }
 
     // Prepare Stats Data
-    val stats = remember(jamaahState.jamaahs) {
+    val stats = remember(jamaahState.jamaahs, primaryColor, warningColor, successColor) {
         val jamaahs = jamaahState.jamaahs
         val total = jamaahs.size
         val pending = jamaahs.count { it.status.lowercase() == "pending" }
@@ -139,10 +130,10 @@ fun AgentDashboardScreen(
         val omzetFormatted = format.format(omzet).replace(",00", "")
 
         listOf(
-            StatItem("Jamaah Saya", total.toString(), Icons.Default.Group, BrandGold, "+5%"),
-            StatItem("Pending", pending.toString(), Icons.Default.Schedule, WarningAmber, "-2%"),
-            StatItem("Approved", approved.toString(), Icons.Default.Verified, SuccessGreen, "+8%"),
-            StatItem("Total Omzet", omzetFormatted, Icons.AutoMirrored.Filled.TrendingUp, InfoBlue, "+12%")
+            StatItem("Jamaah Saya", total.toString(), Icons.Default.Group, primaryColor, "+5%"),
+            StatItem("Pending", pending.toString(), Icons.Default.Schedule, warningColor, "-2%"),
+            StatItem("Approved", approved.toString(), Icons.Default.Verified, successColor, "+8%"),
+            StatItem("Total Omzet", omzetFormatted, Icons.AutoMirrored.Filled.TrendingUp, primaryColor, "+12%")
         )
     }
 
@@ -169,15 +160,15 @@ fun AgentDashboardScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(AppBackground)
+            .background(MaterialTheme.colorScheme.background)
             .drawBehind {
                 drawCircle(
-                    color = BrandGold.copy(alpha = 0.05f),
+                    color = primaryColor.copy(alpha = 0.05f),
                     radius = 200.dp.toPx(),
                     center = Offset(size.width, 0f)
                 )
                 drawCircle(
-                    color = BrandGold.copy(alpha = 0.03f),
+                    color = primaryColor.copy(alpha = 0.03f),
                     radius = 150.dp.toPx(),
                     center = Offset(0f, size.height)
                 )
@@ -284,7 +275,7 @@ private fun DashboardTopBar(
             .fillMaxWidth()
             .statusBarsPadding()
             .padding(horizontal = 16.dp, vertical = 8.dp),
-        color = SurfaceWhite.copy(alpha = 0.9f),
+        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
         shape = RoundedCornerShape(24.dp),
         shadowElevation = 4.dp
     ) {
@@ -296,13 +287,13 @@ private fun DashboardTopBar(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape)
-                    .background(BrandGold.copy(alpha = 0.1f))
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
                     .clickable { showMenu = true },
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = agentName.take(1).uppercase(),
-                    color = BrandGold,
+                    color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp
                 )
@@ -311,8 +302,8 @@ private fun DashboardTopBar(
             Spacer(modifier = Modifier.width(12.dp))
 
             Column(modifier = Modifier.weight(1f)) {
-                Text(text = "Assalamu'alaikum", style = MaterialTheme.typography.labelSmall, color = TextSecondary)
-                Text(text = "$agentName 👋", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = TextPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(text = "Assalamu'alaikum", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(text = "$agentName 👋", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -321,16 +312,16 @@ private fun DashboardTopBar(
                 
                 Box {
                     TopBarIcon(icon = Icons.Default.AccountCircle, onClick = { showMenu = true })
-                    DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }, modifier = Modifier.background(SurfaceWhite)) {
+                    DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }, modifier = Modifier.background(MaterialTheme.colorScheme.surface)) {
                         DropdownMenuItem(
-                            text = { Text("Profil Saya", color = TextPrimary) },
-                            leadingIcon = { Icon(Icons.Default.Person, null, tint = BrandGold) },
+                            text = { Text("Profil Saya", color = MaterialTheme.colorScheme.onSurface) },
+                            leadingIcon = { Icon(Icons.Default.Person, null, tint = MaterialTheme.colorScheme.primary) },
                             onClick = { showMenu = false; onNavigate("profil_agent") }
                         )
-                        HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp), color = MaterialTheme.colorScheme.outline)
                         DropdownMenuItem(
-                            text = { Text("Logout", color = ErrorRed) },
-                            leadingIcon = { Icon(Icons.AutoMirrored.Filled.Logout, null, tint = ErrorRed) },
+                            text = { Text("Logout", color = MaterialTheme.colorScheme.error) },
+                            leadingIcon = { Icon(Icons.AutoMirrored.Filled.Logout, null, tint = MaterialTheme.colorScheme.error) },
                             onClick = { showMenu = false; onLogout() }
                         )
                     }
@@ -343,12 +334,12 @@ private fun DashboardTopBar(
 @Composable
 private fun TopBarIcon(icon: ImageVector, hasBadge: Boolean = false, onClick: () -> Unit = {}) {
     Box(
-        modifier = Modifier.size(40.dp).clip(CircleShape).background(BrandGold.copy(alpha = 0.05f)).clickable { onClick() },
+        modifier = Modifier.size(40.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primary.copy(alpha = 0.05f)).clickable { onClick() },
         contentAlignment = Alignment.Center
     ) {
-        Icon(imageVector = icon, contentDescription = null, tint = BrandGold, modifier = Modifier.size(20.dp))
+        Icon(imageVector = icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
         if (hasBadge) {
-            Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(ErrorRed).align(Alignment.TopEnd).offset(x = (-8).dp, y = 8.dp))
+            Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(MaterialTheme.colorScheme.error).align(Alignment.TopEnd).offset(x = (-8).dp, y = 8.dp))
         }
     }
 }
@@ -363,46 +354,46 @@ private fun DashboardHeroCard(target: Int, achievement: Int) {
     Card(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp).height(160.dp),
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = SurfaceWhite),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
-        Box(modifier = Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(SurfaceWhite, BrandGoldLight.copy(alpha = 0.15f), BrandGold.copy(alpha = 0.05f))))) {
+        Box(modifier = Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(MaterialTheme.colorScheme.surface, MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.15f), MaterialTheme.colorScheme.primary.copy(alpha = 0.05f))))) {
             Row(modifier = Modifier.fillMaxSize().padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
                 Column(modifier = Modifier.weight(1.2f)) {
-                    Box(modifier = Modifier.size(56.dp).clip(CircleShape).background(BrandGold.copy(alpha = 0.1f)), contentAlignment = Alignment.Center) {
-                        Icon(imageVector = Icons.Default.Flag, contentDescription = null, tint = BrandGold, modifier = Modifier.size(28.dp))
+                    Box(modifier = Modifier.size(56.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)), contentAlignment = Alignment.Center) {
+                        Icon(imageVector = Icons.Default.Flag, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(28.dp))
                     }
                     Spacer(modifier = Modifier.height(12.dp))
-                    Text(text = "Target Bulanan", style = MaterialTheme.typography.labelMedium, color = TextSecondary, fontWeight = FontWeight.Medium)
-                    Text(text = "$achievement / $target", style = TextStyle(fontSize = 34.sp, fontWeight = FontWeight.ExtraBold, color = TextPrimary, letterSpacing = (-1).sp))
-                    Text(text = "Jamaah Terdaftar", style = MaterialTheme.typography.labelSmall, color = TextMuted)
+                    Text(text = "Target Bulanan", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Medium)
+                    Text(text = "$achievement / $target", style = TextStyle(fontSize = 34.sp, fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.onSurface, letterSpacing = (-1).sp))
+                    Text(text = "Jamaah Terdaftar", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f))
                 }
 
                 Column(modifier = Modifier.weight(1f).padding(horizontal = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Surface(shape = RoundedCornerShape(12.dp), border = BorderStroke(1.dp, BrandGold.copy(alpha = 0.3f)), color = SurfaceWhite, modifier = Modifier.size(width = 54.dp, height = 32.dp)) {
+                    Surface(shape = RoundedCornerShape(12.dp), border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)), color = MaterialTheme.colorScheme.surface, modifier = Modifier.size(width = 54.dp, height = 32.dp)) {
                         Box(contentAlignment = Alignment.Center) {
-                            Text(text = "$percentage%", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = BrandGold)
+                            Text(text = "$percentage%", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                         }
                     }
                     Spacer(modifier = Modifier.height(16.dp))
-                    LinearProgressIndicator(progress = { animatedProgress }, modifier = Modifier.fillMaxWidth().height(10.dp).clip(CircleShape), color = BrandGold, trackColor = BrandGold.copy(alpha = 0.1f))
+                    LinearProgressIndicator(progress = { animatedProgress }, modifier = Modifier.fillMaxWidth().height(10.dp).clip(CircleShape), color = MaterialTheme.colorScheme.primary, trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
                     Spacer(modifier = Modifier.height(12.dp))
                     val currentMonth = SimpleDateFormat("MMMM yyyy", Locale("id", "ID")).format(Date())
-                    Text(text = "1 - 31 $currentMonth", style = MaterialTheme.typography.labelSmall, color = TextMuted, fontSize = 10.sp)
+                    Text(text = "1 - 31 $currentMonth", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f), fontSize = 10.sp)
                 }
 
-                Box(modifier = Modifier.fillMaxHeight(0.7f).width(1.dp).background(TextMuted.copy(alpha = 0.2f)))
+                Box(modifier = Modifier.fillMaxHeight(0.7f).width(1.dp).background(MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)))
 
                 Column(modifier = Modifier.weight(1f).padding(start = 16.dp), horizontalAlignment = Alignment.End) {
-                    Text(text = "Sisa Target", style = MaterialTheme.typography.labelSmall, color = TextSecondary, textAlign = TextAlign.End)
+                    Text(text = "Sisa Target", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.End)
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
-                        Icon(Icons.Default.Group, null, tint = BrandGold, modifier = Modifier.size(14.dp))
+                        Icon(Icons.Default.Group, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(14.dp))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text(text = "$remaining", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = TextPrimary, textAlign = TextAlign.End)
-                        Text(text = " Jamaah", style = MaterialTheme.typography.labelSmall, color = TextMuted, textAlign = TextAlign.End)
+                        Text(text = "$remaining", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface, textAlign = TextAlign.End)
+                        Text(text = " Jamaah", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f), textAlign = TextAlign.End)
                     }
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text(text = "Ayo capai target bulan ini.", style = MaterialTheme.typography.labelSmall, color = TextSecondary, fontWeight = FontWeight.Medium, lineHeight = 14.sp, fontSize = 11.sp, textAlign = TextAlign.End)
+                    Text(text = "Ayo capai target bulan ini.", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Medium, lineHeight = 14.sp, fontSize = 11.sp, textAlign = TextAlign.End)
                 }
             }
         }
@@ -412,7 +403,7 @@ private fun DashboardHeroCard(target: Int, achievement: Int) {
 @Composable
 private fun QuickActionSection(actions: List<QuickAction>, onActionClick: (String) -> Unit) {
     Column(modifier = Modifier.padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text(text = "Aksi Cepat", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = TextPrimary)
+        Text(text = "Aksi Cepat", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             actions.forEach { action ->
                 QuickActionCard(action = action, onClick = { onActionClick(action.route) })
@@ -427,17 +418,17 @@ private fun QuickActionCard(action: QuickAction, onClick: () -> Unit) {
     val isPressed by interactionSource.collectIsPressedAsState()
     val scale by animateFloatAsState(if (isPressed) 0.98f else 1f, tween(120), label = "")
 
-    Card(modifier = Modifier.fillMaxWidth().scale(scale).clickable(interactionSource = interactionSource, indication = null) { onClick() }, shape = RoundedCornerShape(20.dp), colors = CardDefaults.cardColors(containerColor = SurfaceWhite), elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)) {
+    Card(modifier = Modifier.fillMaxWidth().scale(scale).clickable(interactionSource = interactionSource, indication = null) { onClick() }, shape = RoundedCornerShape(20.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)) {
         Row(modifier = Modifier.padding(16.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Box(modifier = Modifier.size(48.dp).clip(CircleShape).background(BrandGold.copy(alpha = 0.08f)), contentAlignment = Alignment.Center) {
-                Icon(imageVector = action.icon, contentDescription = null, tint = BrandGold, modifier = Modifier.size(24.dp))
+            Box(modifier = Modifier.size(48.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)), contentAlignment = Alignment.Center) {
+                Icon(imageVector = action.icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))
             }
             Spacer(modifier = Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text(text = action.title, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = TextPrimary)
-                Text(text = action.subtitle, style = MaterialTheme.typography.labelSmall, color = TextSecondary)
+                Text(text = action.title, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                Text(text = action.subtitle, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            Icon(imageVector = Icons.Default.ChevronRight, contentDescription = null, tint = BrandGold.copy(alpha = 0.5f), modifier = Modifier.size(20.dp))
+            Icon(imageVector = Icons.Default.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f), modifier = Modifier.size(20.dp))
         }
     }
 }
@@ -445,7 +436,7 @@ private fun QuickActionCard(action: QuickAction, onClick: () -> Unit) {
 @Composable
 private fun StatisticsSection(stats: List<StatItem>, isLoading: Boolean = false) {
     Column(modifier = Modifier.padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text(text = "Statistik Performa", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = TextPrimary)
+        Text(text = "Statistik Performa", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 StatCard(stat = stats[0], modifier = Modifier.weight(1f), isLoading = isLoading)
@@ -461,27 +452,27 @@ private fun StatisticsSection(stats: List<StatItem>, isLoading: Boolean = false)
 
 @Composable
 private fun StatCard(stat: StatItem, modifier: Modifier = Modifier, isLoading: Boolean = false) {
-    Card(modifier = modifier, shape = RoundedCornerShape(20.dp), colors = CardDefaults.cardColors(containerColor = SurfaceWhite), elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)) {
+    Card(modifier = modifier, shape = RoundedCornerShape(20.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Box(modifier = Modifier.size(32.dp).clip(CircleShape).background(stat.color.copy(alpha = 0.1f)), contentAlignment = Alignment.Center) {
                     Icon(stat.icon, null, tint = stat.color, modifier = Modifier.size(16.dp))
                 }
                 if (!isLoading) {
-                    Box(modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(SuccessGreen.copy(alpha = 0.1f)).padding(horizontal = 6.dp, vertical = 2.dp)) {
-                        Text(text = stat.growth, style = MaterialTheme.typography.labelSmall, color = SuccessGreen, fontWeight = FontWeight.Bold)
+                    Box(modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(MaterialTheme.colorScheme.tertiary.copy(alpha = 0.1f)).padding(horizontal = 6.dp, vertical = 2.dp)) {
+                        Text(text = stat.growth, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.tertiary, fontWeight = FontWeight.Bold)
                     }
                 }
             }
             Spacer(modifier = Modifier.height(12.dp))
             if (isLoading) {
                 Box(modifier = Modifier.fillMaxWidth().height(28.dp), contentAlignment = Alignment.CenterStart) {
-                    CircularProgressIndicator(modifier = Modifier.size(20.dp), color = BrandGold, strokeWidth = 2.dp)
+                    CircularProgressIndicator(modifier = Modifier.size(20.dp), color = MaterialTheme.colorScheme.primary, strokeWidth = 2.dp)
                 }
             } else {
-                Text(text = stat.value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold, color = TextPrimary)
+                Text(text = stat.value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.onSurface)
             }
-            Text(text = stat.label, style = MaterialTheme.typography.labelSmall, color = TextSecondary)
+            Text(text = stat.label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
@@ -494,8 +485,8 @@ private fun UpcomingPackageSection(
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            Text(text = "Paket Umroh & Haji", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = TextPrimary)
-            Text(text = "Lihat Semua", style = MaterialTheme.typography.labelMedium, color = BrandGold, fontWeight = FontWeight.Bold, modifier = Modifier.clickable { })
+            Text(text = "Paket Umroh & Haji", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+            Text(text = "Lihat Semua", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, modifier = Modifier.clickable { })
         }
         if (isLoading) {
             LazyRow(contentPadding = PaddingValues(horizontal = 20.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -503,7 +494,7 @@ private fun UpcomingPackageSection(
             }
         } else if (paketList.isEmpty()) {
             Box(modifier = Modifier.fillMaxWidth().height(100.dp), contentAlignment = Alignment.Center) {
-                Text("No available packages.", style = MaterialTheme.typography.bodyMedium, color = TextMuted)
+                Text("No available packages.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         } else {
             LazyRow(contentPadding = PaddingValues(horizontal = 20.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -517,26 +508,27 @@ private fun UpcomingPackageSection(
 
 @Composable
 private fun PackageCard(paket: com.agunganamiroh.data.model.Paket, onDetailClick: (com.agunganamiroh.data.model.Paket) -> Unit) {
-    Card(modifier = Modifier.width(260.dp).clickable { onDetailClick(paket) }, shape = RoundedCornerShape(20.dp), colors = CardDefaults.cardColors(containerColor = SurfaceWhite), elevation = CardDefaults.cardElevation(defaultElevation = 2.dp), border = BorderStroke(1.dp, BrandGold.copy(alpha = 0.1f))) {
+    Card(modifier = Modifier.width(260.dp).clickable { onDetailClick(paket) }, shape = RoundedCornerShape(20.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), elevation = CardDefaults.cardElevation(defaultElevation = 2.dp), border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))) {
         Column(modifier = Modifier.padding(16.dp)) {
             val isAvailable = paket.sisaSeat > 0
-            Surface(shape = RoundedCornerShape(8.dp), color = (if (isAvailable) SuccessGreen else ErrorRed).copy(alpha = 0.1f)) {
-                Text(text = if (isAvailable) "Available" else "Sold Out", modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp), style = MaterialTheme.typography.labelSmall, color = if (isAvailable) SuccessGreen else ErrorRed, fontWeight = FontWeight.Bold)
+            val statusColor = if (isAvailable) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.error
+            Surface(shape = RoundedCornerShape(8.dp), color = statusColor.copy(alpha = 0.1f)) {
+                Text(text = if (isAvailable) "Available" else "Sold Out", modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp), style = MaterialTheme.typography.labelSmall, color = statusColor, fontWeight = FontWeight.Bold)
             }
             Spacer(modifier = Modifier.height(12.dp))
-            Text(text = paket.title, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold, color = TextPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text(text = "${paket.durasi} • ${paket.maskapai}", style = MaterialTheme.typography.labelSmall, color = TextSecondary)
+            Text(text = paket.title, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(text = "${paket.durasi} • ${paket.maskapai}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(modifier = Modifier.height(16.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.CalendarMonth, null, tint = BrandGold, modifier = Modifier.size(14.dp))
+                Icon(Icons.Default.CalendarMonth, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(14.dp))
                 Spacer(modifier = Modifier.width(6.dp))
-                Text(paket.tanggal, style = MaterialTheme.typography.labelSmall, color = TextPrimary)
+                Text(paket.tanggal, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface)
             }
             Spacer(modifier = Modifier.height(8.dp))
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 val format = NumberFormat.getCurrencyInstance(Locale("id", "ID"))
-                Text(text = format.format(paket.harga).replace(",00", ""), style = MaterialTheme.typography.labelLarge, color = BrandGold, fontWeight = FontWeight.ExtraBold)
-                Text(text = "${paket.sisaSeat} Seat", style = MaterialTheme.typography.labelSmall, color = if (paket.sisaSeat < 5) ErrorRed else TextMuted)
+                Text(text = format.format(paket.harga).replace(",00", ""), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.ExtraBold)
+                Text(text = "${paket.sisaSeat} Seat", style = MaterialTheme.typography.labelSmall, color = if (paket.sisaSeat < 5) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f))
             }
         }
     }
@@ -544,23 +536,23 @@ private fun PackageCard(paket: com.agunganamiroh.data.model.Paket, onDetailClick
 
 @Composable
 private fun ShimmerPackageCard() {
-    Card(modifier = Modifier.width(260.dp).height(160.dp), shape = RoundedCornerShape(20.dp), colors = CardDefaults.cardColors(containerColor = SurfaceWhite.copy(alpha = 0.5f))) {}
+    Card(modifier = Modifier.width(260.dp).height(160.dp), shape = RoundedCornerShape(20.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.5f))) {}
 }
 
 @Composable
 private fun ActivitySection(activities: List<com.agunganamiroh.viewmodel.Activity>, isLoading: Boolean) {
     Column(modifier = Modifier.padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            Text(text = "Aktivitas Terbaru", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = TextPrimary)
-            Text(text = "See All", style = MaterialTheme.typography.labelMedium, color = BrandGold, fontWeight = FontWeight.Bold, modifier = Modifier.clickable { })
+            Text(text = "Aktivitas Terbaru", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+            Text(text = "See All", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, modifier = Modifier.clickable { })
         }
-        Card(shape = RoundedCornerShape(24.dp), colors = CardDefaults.cardColors(containerColor = SurfaceWhite), elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)) {
+        Card(shape = RoundedCornerShape(24.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)) {
             Column(modifier = Modifier.padding(16.dp)) {
                 if (isLoading) {
                     repeat(3) { ActivityShimmerItem() }
                 } else if (activities.isEmpty()) {
                     Box(modifier = Modifier.fillMaxWidth().height(80.dp), contentAlignment = Alignment.Center) {
-                        Text("No recent activity.", style = MaterialTheme.typography.bodyMedium, color = TextMuted)
+                        Text("No recent activity.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 } else {
                     activities.take(5).forEachIndexed { index, activity ->
@@ -576,30 +568,24 @@ private fun ActivitySection(activities: List<com.agunganamiroh.viewmodel.Activit
 private fun ActivityItem(activity: com.agunganamiroh.viewmodel.Activity, isLast: Boolean) {
     Row(modifier = Modifier.fillMaxWidth()) {
         val color = when(activity.type) {
-            "registration" -> InfoBlue
-            "status" -> if(activity.status == "approved") SuccessGreen else WarningAmber
-            "payment" -> SuccessGreen
-            else -> BrandGold
-        }
-        val icon = when(activity.type) {
-            "registration" -> Icons.Default.PersonAdd
-            "status" -> Icons.Default.FactCheck
-            "payment" -> Icons.Default.Payments
-            else -> Icons.Default.Notifications
+            "registration" -> MaterialTheme.colorScheme.primary
+            "status" -> if(activity.status == "approved") MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.secondary
+            "payment" -> MaterialTheme.colorScheme.tertiary
+            else -> MaterialTheme.colorScheme.primary
         }
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Box(modifier = Modifier.size(12.dp).clip(CircleShape).background(color))
             if (!isLast) {
-                Box(modifier = Modifier.width(2.dp).height(50.dp).background(BrandGold.copy(alpha = 0.1f)))
+                Box(modifier = Modifier.width(2.dp).height(50.dp).background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)))
             }
         }
         Spacer(modifier = Modifier.width(16.dp))
         Column(modifier = Modifier.weight(1f)) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text(text = activity.title, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = TextPrimary)
-                Text(text = getRelativeTime(activity.time), style = MaterialTheme.typography.labelSmall, color = TextMuted)
+                Text(text = activity.title, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                Text(text = getRelativeTime(activity.time), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f))
             }
-            Text(text = activity.subtitle, style = MaterialTheme.typography.labelSmall, color = TextSecondary)
+            Text(text = activity.subtitle, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(modifier = Modifier.height(16.dp))
         }
     }
@@ -625,7 +611,7 @@ private fun getRelativeTime(timeMillis: Long): String {
 @Composable
 private fun MenuSection(menuItems: List<MenuItem>, onMenuClick: (String) -> Unit) {
     Column(modifier = Modifier.padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text(text = "Menu Utama", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = TextPrimary)
+        Text(text = "Menu Utama", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             menuItems.chunked(2).forEach { row ->
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -647,28 +633,32 @@ private fun MenuCard(item: MenuItem, modifier: Modifier = Modifier, onClick: () 
     val isPressed by interactionSource.collectIsPressedAsState()
     val scale by animateFloatAsState(if (isPressed) 0.97f else 1f, tween(120), label = "")
 
-    Card(modifier = modifier.scale(scale).clickable(interactionSource = interactionSource, indication = null) { onClick() }, shape = RoundedCornerShape(18.dp), colors = CardDefaults.cardColors(containerColor = SurfaceWhite), elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)) {
+    Card(modifier = modifier.scale(scale).clickable(interactionSource = interactionSource, indication = null) { onClick() }, shape = RoundedCornerShape(18.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Top) {
-                Box(modifier = Modifier.size(40.dp).clip(CircleShape).background(BrandGold.copy(alpha = 0.05f)), contentAlignment = Alignment.Center) {
-                    Icon(item.icon, null, tint = BrandGold, modifier = Modifier.size(20.dp))
+                Box(modifier = Modifier.size(40.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primary.copy(alpha = 0.05f)), contentAlignment = Alignment.Center) {
+                    Icon(item.icon, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
                 }
                 if (item.badge > 0) {
-                    Badge(containerColor = ErrorRed, contentColor = Color.White) { Text(item.badge.toString()) }
+                    Badge(containerColor = MaterialTheme.colorScheme.error, contentColor = MaterialTheme.colorScheme.onError) { Text(item.badge.toString()) }
                 } else {
-                    Icon(Icons.Default.ChevronRight, null, tint = TextMuted, modifier = Modifier.size(16.dp))
+                    Icon(Icons.Default.ChevronRight, null, tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f), modifier = Modifier.size(16.dp))
                 }
             }
             Spacer(modifier = Modifier.height(12.dp))
-            Text(text = item.title, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = TextPrimary)
-            Text(text = item.subtitle, style = MaterialTheme.typography.labelSmall, color = TextSecondary, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(text = item.title, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+            Text(text = item.subtitle, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
     }
 }
 
 @Composable
 private fun IslamicPatternOverlay() {
-    Canvas(modifier = Modifier.fillMaxSize().alpha(0.03f)) {
+    val patternColor = MaterialTheme.colorScheme.primary
+    val backgroundColor = MaterialTheme.colorScheme.background
+    val opacity = if (backgroundColor.luminance() < 0.5f) 0.05f else 0.03f
+    
+    Canvas(modifier = Modifier.fillMaxSize().alpha(opacity)) {
         val sizePx = 60.dp.toPx()
         val strokeWidth = 1.dp.toPx()
         for (x in 0..(size.width / sizePx).toInt()) {
@@ -685,7 +675,7 @@ private fun IslamicPatternOverlay() {
                     lineTo(cx - sizePx * 0.5f, cy)
                     lineTo(cx - sizePx * 0.15f, cy - sizePx * 0.15f)
                     close()
-                }, color = BrandGold, style = Stroke(width = strokeWidth))
+                }, color = patternColor, style = Stroke(width = strokeWidth))
             }
         }
     }
@@ -694,31 +684,31 @@ private fun IslamicPatternOverlay() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun PaketDetailBottomSheet(paket: com.agunganamiroh.data.model.Paket, onDismiss: () -> Unit) {
-    ModalBottomSheet(onDismissRequest = onDismiss, containerColor = SurfaceWhite, dragHandle = { BottomSheetDefaults.DragHandle(color = BrandGold.copy(alpha = 0.3f)) }) {
+    ModalBottomSheet(onDismissRequest = onDismiss, containerColor = MaterialTheme.colorScheme.surface, dragHandle = { BottomSheetDefaults.DragHandle(color = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)) }) {
         Column(modifier = Modifier.fillMaxWidth().padding(24.dp).padding(bottom = 32.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
-            Text(text = "Detail Paket", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = BrandGold)
-            Box(modifier = Modifier.fillMaxWidth().height(180.dp).clip(RoundedCornerShape(16.dp)).background(BrandGoldLight.copy(alpha = 0.3f)), contentAlignment = Alignment.Center) {
-                Icon(Icons.Default.Image, null, tint = BrandGold.copy(alpha = 0.4f), modifier = Modifier.size(48.dp))
+            Text(text = "Detail Paket", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+            Box(modifier = Modifier.fillMaxWidth().height(180.dp).clip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)), contentAlignment = Alignment.Center) {
+                Icon(Icons.Default.Image, null, tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f), modifier = Modifier.size(48.dp))
                 if (paket.brosurName.isNotBlank()) {
-                    Text("Brochure: ${paket.brosurName}", style = MaterialTheme.typography.labelSmall, color = BrandGold, modifier = Modifier.align(Alignment.BottomCenter).padding(8.dp))
+                    Text("Brochure: ${paket.brosurName}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary, modifier = Modifier.align(Alignment.BottomCenter).padding(8.dp))
                 }
             }
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(paket.title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.ExtraBold, color = TextPrimary)
+                Text(paket.title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.onSurface)
                 Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                     DetailBadge(icon = Icons.Default.Timer, text = paket.durasi)
                     DetailBadge(icon = Icons.Default.Flight, text = paket.maskapai)
                 }
-                HorizontalDivider(color = AppBackground)
+                HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
                 DetailRow(label = "Tanggal Keberangkatan", value = paket.tanggal, icon = Icons.Default.CalendarToday)
                 DetailRow(label = "Hotel Makkah", value = paket.hotelMakkah, icon = Icons.Default.Hotel)
                 DetailRow(label = "Hotel Madinah", value = paket.hotelMadinah, icon = Icons.Default.Hotel)
                 DetailRow(label = "Sisa Kursi", value = "${paket.sisaSeat} Kursi", icon = Icons.Default.Group)
                 val format = NumberFormat.getCurrencyInstance(Locale("id", "ID"))
-                DetailRow(label = "Harga Paket", value = format.format(paket.harga).replace(",00", ""), icon = Icons.Default.Payments, valueColor = BrandGold, isLarge = true)
+                DetailRow(label = "Harga Paket", value = format.format(paket.harga).replace(",00", ""), icon = Icons.Default.Payments, valueColor = MaterialTheme.colorScheme.primary, isLarge = true)
             }
-            Button(onClick = onDismiss, modifier = Modifier.fillMaxWidth().height(56.dp), shape = RoundedCornerShape(16.dp), colors = ButtonDefaults.buttonColors(containerColor = BrandGold)) {
-                Text("TUTUP", fontWeight = FontWeight.Bold)
+            Button(onClick = onDismiss, modifier = Modifier.fillMaxWidth().height(56.dp), shape = RoundedCornerShape(16.dp), colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)) {
+                Text("TUTUP", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimary)
             }
         }
     }
@@ -726,25 +716,25 @@ private fun PaketDetailBottomSheet(paket: com.agunganamiroh.data.model.Paket, on
 
 @Composable
 private fun DetailBadge(icon: ImageVector, text: String) {
-    Surface(shape = RoundedCornerShape(12.dp), color = BrandGold.copy(alpha = 0.05f), border = BorderStroke(1.dp, BrandGold.copy(alpha = 0.1f))) {
+    Surface(shape = RoundedCornerShape(12.dp), color = MaterialTheme.colorScheme.primary.copy(alpha = 0.05f), border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))) {
         Row(modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-            Icon(icon, null, tint = BrandGold, modifier = Modifier.size(14.dp))
+            Icon(icon, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(14.dp))
             Spacer(modifier = Modifier.width(6.dp))
-            Text(text, style = MaterialTheme.typography.labelMedium, color = TextPrimary, fontWeight = FontWeight.Medium)
+            Text(text, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Medium)
         }
     }
 }
 
 @Composable
-private fun DetailRow(label: String, value: String, icon: ImageVector, valueColor: Color = TextPrimary, isLarge: Boolean = false) {
+private fun DetailRow(label: String, value: String, icon: ImageVector, valueColor: Color? = null, isLarge: Boolean = false) {
     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        Box(modifier = Modifier.size(32.dp).clip(CircleShape).background(BrandGold.copy(alpha = 0.05f)), contentAlignment = Alignment.Center) {
-            Icon(icon, null, tint = BrandGold, modifier = Modifier.size(16.dp))
+        Box(modifier = Modifier.size(32.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primary.copy(alpha = 0.05f)), contentAlignment = Alignment.Center) {
+            Icon(icon, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
         }
         Spacer(modifier = Modifier.width(16.dp))
         Column {
-            Text(label, style = MaterialTheme.typography.labelSmall, color = TextMuted)
-            Text(text = value, style = if (isLarge) MaterialTheme.typography.titleLarge else MaterialTheme.typography.bodyLarge, fontWeight = if (isLarge) FontWeight.ExtraBold else FontWeight.Bold, color = valueColor)
+            Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f))
+            Text(text = value, style = if (isLarge) MaterialTheme.typography.titleLarge else MaterialTheme.typography.bodyLarge, fontWeight = if (isLarge) FontWeight.ExtraBold else FontWeight.Bold, color = valueColor ?: MaterialTheme.colorScheme.onSurface)
         }
     }
 }

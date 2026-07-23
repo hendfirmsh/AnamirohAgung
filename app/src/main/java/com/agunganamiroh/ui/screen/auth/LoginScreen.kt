@@ -2,42 +2,13 @@ package com.agunganamiroh.ui.screen.auth
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -45,33 +16,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.input.*
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.agunganamiroh.R
-import kotlinx.coroutines.flow.StateFlow
-import com.agunganamiroh.viewmodel.AuthViewModel
-import com.agunganamiroh.viewmodel.AuthUiState
 import androidx.lifecycle.viewmodel.compose.viewModel
-
-// ============================================================
-// WARNA APLIKASI AGUNG ANAMIROH
-// ============================================================
-private val ColorBackground = Color(0xFFFFFFFF)
-private val ColorGold = Color(0xFFD4AF37)
-private val ColorGoldDark = Color(0xFFB8960C)
-private val ColorTextPrimary = Color(0xFF111111)
-private val ColorTextSecondary = Color(0xFF666666)
-private val ColorBorder = Color(0xFFE5E5E5)
-private val ColorButtonText = Color(0xFF000000)
-private val ColorError = Color(0xFFD32F2F)
-
+import com.agunganamiroh.R
+import com.agunganamiroh.viewmodel.AuthViewModel
 
 // ============================================================
 // LOGIN SCREEN
@@ -93,15 +46,8 @@ fun LoginScreen(
 
     // Handle login success
     LaunchedEffect(uiState.loginSuccess) {
-
         if (uiState.loginSuccess) {
-
-            if (uiState.loginSuccess) {
-
-                onLoginSuccess(
-                    uiState.role
-                )
-            }
+            onLoginSuccess(uiState.role)
         }
     }
 
@@ -114,7 +60,7 @@ fun LoginScreen(
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        containerColor = ColorBackground,
+        containerColor = MaterialTheme.colorScheme.background,
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
     ) { paddingValues ->
         Box(
@@ -123,12 +69,11 @@ fun LoginScreen(
                 .padding(paddingValues)
         ) {
             Image(
-                painter = painterResource(
-                    id = R.drawable.background_login
-                ),
+                painter = painterResource(id = R.drawable.background_login),
                 contentDescription = null,
                 modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop
+                contentScale = ContentScale.Crop,
+                alpha = 0.5f // Dim the background for better readability in dark mode
             )
             Column(
                 modifier = Modifier
@@ -151,20 +96,13 @@ fun LoginScreen(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // ============================================================
-                // JUDUL APLIKASI
-                // ============================================================
-
-
-                Spacer(modifier = Modifier.height(6.dp))
-
-                // ============================================================
                 // SUBTITLE
                 // ============================================================
                 Text(
                     text = "Sistem Manajemen Umroh",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
-                    color = ColorTextSecondary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
                     letterSpacing = 1.sp
                 )
@@ -177,11 +115,11 @@ fun LoginScreen(
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(24.dp),
-                    colors = CardDefaults.cardColors(containerColor = ColorBackground),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                     elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
                     border = androidx.compose.foundation.BorderStroke(
                         width = 1.dp,
-                        color = ColorGold.copy(alpha = 0.4f)
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)
                     )
                 ) {
                     Column(
@@ -190,14 +128,11 @@ fun LoginScreen(
                             .padding(24.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        // --------------------------------------------------------
-                        // LABEL FORM
-                        // --------------------------------------------------------
                         Text(
                             text = "Masuk ke Akun Anda",
                             fontSize = 18.sp,
                             fontWeight = FontWeight.SemiBold,
-                            color = ColorTextPrimary,
+                            color = MaterialTheme.colorScheme.onSurface,
                             textAlign = TextAlign.Center
                         )
 
@@ -207,7 +142,7 @@ fun LoginScreen(
                             text = "Silakan masukkan email dan password Anda",
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Normal,
-                            color = ColorTextSecondary,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center
                         )
 
@@ -223,23 +158,13 @@ fun LoginScreen(
                                 emailError = null
                             },
                             modifier = Modifier.fillMaxWidth(),
-                            label = {
-                                Text(
-                                    text = "Email",
-                                    color = ColorTextSecondary
-                                )
-                            },
-                            placeholder = {
-                                Text(
-                                    text = "contoh@email.com",
-                                    color = ColorTextSecondary.copy(alpha = 0.5f)
-                                )
-                            },
+                            label = { Text(text = "Email") },
+                            placeholder = { Text(text = "contoh@email.com") },
                             leadingIcon = {
                                 Icon(
                                     imageVector = Icons.Default.Email,
                                     contentDescription = "Email Icon",
-                                    tint = ColorGold
+                                    tint = MaterialTheme.colorScheme.primary
                                 )
                             },
                             singleLine = true,
@@ -247,27 +172,22 @@ fun LoginScreen(
                                 keyboardType = KeyboardType.Email,
                                 imeAction = ImeAction.Next
                             ),
-                            isError = emailError != null || uiState.error != null,
+                            isError = emailError != null,
                             supportingText = {
                                 if (emailError != null) {
-                                    Text(
-                                        text = emailError!!,
-                                        color = ColorError,
-                                        fontSize = 12.sp
-                                    )
+                                    Text(text = emailError!!, color = MaterialTheme.colorScheme.error)
                                 }
                             },
                             shape = RoundedCornerShape(12.dp),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = ColorGold,
-                                unfocusedBorderColor = ColorBorder,
-                                focusedLabelColor = ColorGold,
-                                unfocusedLabelColor = ColorTextSecondary,
-                                cursorColor = ColorGold,
-                                focusedTextColor = ColorTextPrimary,
-                                unfocusedTextColor = ColorTextPrimary,
-                                errorBorderColor = ColorError,
-                                errorCursorColor = ColorError
+                                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                                focusedLabelColor = MaterialTheme.colorScheme.primary,
+                                unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                cursorColor = MaterialTheme.colorScheme.primary,
+                                focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                                unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                                errorBorderColor = MaterialTheme.colorScheme.error
                             )
                         )
 
@@ -283,100 +203,56 @@ fun LoginScreen(
                                 passwordError = null
                             },
                             modifier = Modifier.fillMaxWidth(),
-                            label = {
-                                Text(
-                                    text = "Password",
-                                    color = ColorTextSecondary
-                                )
-                            },
-                            placeholder = {
-                                Text(
-                                    text = "Masukkan password",
-                                    color = ColorTextSecondary.copy(alpha = 0.5f)
-                                )
-                            },
+                            label = { Text(text = "Password") },
+                            placeholder = { Text(text = "Masukkan password") },
                             leadingIcon = {
                                 Icon(
                                     imageVector = Icons.Default.Lock,
                                     contentDescription = "Lock Icon",
-                                    tint = ColorGold
+                                    tint = MaterialTheme.colorScheme.primary
                                 )
                             },
                             trailingIcon = {
-                                IconButton(
-                                    onClick = { passwordVisible = !passwordVisible }
-                                ) {
+                                IconButton(onClick = { passwordVisible = !passwordVisible }) {
                                     Icon(
-                                        imageVector = if (passwordVisible)
-                                            Icons.Default.VisibilityOff
-                                        else
-                                            Icons.Default.Visibility,
-                                        contentDescription = if (passwordVisible)
-                                            "Sembunyikan Password"
-                                        else
-                                            "Tampilkan Password",
-                                        tint = ColorTextSecondary
+                                        imageVector = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
                             },
                             singleLine = true,
-                            visualTransformation = if (passwordVisible)
-                                VisualTransformation.None
-                            else
-                                PasswordVisualTransformation(),
+                            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                             keyboardOptions = KeyboardOptions(
                                 keyboardType = KeyboardType.Password,
                                 imeAction = ImeAction.Done
                             ),
-                            isError = passwordError != null || uiState.error != null,
+                            isError = passwordError != null,
                             supportingText = {
                                 if (passwordError != null) {
-                                    Text(
-                                        text = passwordError!!,
-                                        color = ColorError,
-                                        fontSize = 12.sp
-                                    )
+                                    Text(text = passwordError!!, color = MaterialTheme.colorScheme.error)
                                 }
                             },
                             shape = RoundedCornerShape(12.dp),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = ColorGold,
-                                unfocusedBorderColor = ColorBorder,
-                                focusedLabelColor = ColorGold,
-                                unfocusedLabelColor = ColorTextSecondary,
-                                cursorColor = ColorGold,
-                                focusedTextColor = ColorTextPrimary,
-                                unfocusedTextColor = ColorTextPrimary,
-                                errorBorderColor = ColorError,
-                                errorCursorColor = ColorError
+                                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                                focusedLabelColor = MaterialTheme.colorScheme.primary,
+                                unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                cursorColor = MaterialTheme.colorScheme.primary,
+                                focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                                unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                                errorBorderColor = MaterialTheme.colorScheme.error
                             )
                         )
 
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        // --------------------------------------------------------
-                        // ERROR MESSAGE
-                        // --------------------------------------------------------
-                        if (uiState.error != null) {
-                            Text(
-                                text = uiState.error!!,
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.Medium,
-                                color = ColorError,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                        }
-
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(24.dp))
 
                         // --------------------------------------------------------
                         // TOMBOL LOGIN
                         // --------------------------------------------------------
                         Button(
                             onClick = {
-                                // Validasi input
                                 var isValid = true
                                 if (email.isBlank()) {
                                     emailError = "Email tidak boleh kosong"
@@ -402,17 +278,15 @@ fun LoginScreen(
                                 .height(56.dp),
                             shape = RoundedCornerShape(16.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = ColorGold,
-                                contentColor = ColorButtonText,
-                                disabledContainerColor = ColorGold.copy(alpha = 0.5f),
-                                disabledContentColor = ColorButtonText.copy(alpha = 0.5f)
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = MaterialTheme.colorScheme.onPrimary
                             ),
                             enabled = !uiState.loading
                         ) {
                             if (uiState.loading) {
                                 CircularProgressIndicator(
                                     modifier = Modifier.size(24.dp),
-                                    color = ColorButtonText,
+                                    color = MaterialTheme.colorScheme.onPrimary,
                                     strokeWidth = 2.dp
                                 )
                             } else {
@@ -420,7 +294,6 @@ fun LoginScreen(
                                     text = "MASUK",
                                     fontSize = 16.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = ColorButtonText,
                                     letterSpacing = 1.sp
                                 )
                             }
@@ -430,14 +303,11 @@ fun LoginScreen(
 
                 Spacer(modifier = Modifier.height(32.dp))
 
-                // ============================================================
-                // FOOTER
-                // ============================================================
                 Text(
-                    text = "\u00A9 Agung Anamiroh Tour & Travel",
+                    text = "© Agung Anamiroh Tour & Travel",
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Normal,
-                    color = ColorTextSecondary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center
                 )
             }
@@ -448,12 +318,7 @@ fun LoginScreen(
 @Preview(showBackground = true)
 @Composable
 fun LoginPreview() {
-
     MaterialTheme {
-
-        Text(
-            text = "Login Screen Preview"
-        )
-
+        LoginScreen(onLoginSuccess = {})
     }
 }

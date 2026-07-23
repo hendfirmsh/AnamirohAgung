@@ -21,6 +21,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -36,19 +37,6 @@ import com.agunganamiroh.viewmodel.JamaahViewModel
 import com.agunganamiroh.viewmodel.PaketViewModel
 import java.text.NumberFormat
 import java.util.*
-
-// ============================================================
-// PREMIUM ENTERPRISE COLORS
-// ============================================================
-private val BrandGold = Color(0xFFC89B3C)
-private val AppBackground = Color(0xFFFAF8F5)
-private val SurfaceWhite = Color(0xFFFFFFFF)
-private val TextPrimary = Color(0xFF1F1F1F)
-private val TextSecondary = Color(0xFF6B7280)
-private val TextMuted = Color(0xFF9CA3AF)
-private val SuccessGreen = Color(0xFF22C55E)
-private val WarningAmber = Color(0xFFF59E0B)
-private val ErrorRed = Color(0xFFEF4444)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -79,21 +67,21 @@ fun DetailJamaahScreen(
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize().background(AppBackground)) {
+    Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         IslamicPatternOverlay()
 
         Scaffold(
             topBar = {
                 CenterAlignedTopAppBar(
-                    title = { Text("Detail Jamaah", fontWeight = FontWeight.ExtraBold, color = BrandGold) },
+                    title = { Text("Detail Jamaah", fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.primary) },
                     navigationIcon = {
                         IconButton(onClick = { navController.popBackStack() }) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = BrandGold)
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = MaterialTheme.colorScheme.primary)
                         }
                     },
                     actions = {
                         IconButton(onClick = { navController.navigate("input_jamaah?id=$jamaahId") }) {
-                            Icon(Icons.Default.Edit, "Edit", tint = BrandGold)
+                            Icon(Icons.Default.Edit, "Edit", tint = MaterialTheme.colorScheme.primary)
                         }
                     },
                     colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent)
@@ -174,12 +162,12 @@ private fun HeroProfileCard(jamaah: Jamaah) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(28.dp),
-        colors = CardDefaults.cardColors(containerColor = SurfaceWhite),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Box(
             modifier = Modifier.fillMaxWidth().background(
-                brush = Brush.verticalGradient(listOf(BrandGold.copy(alpha = 0.08f), SurfaceWhite))
+                brush = Brush.verticalGradient(listOf(MaterialTheme.colorScheme.primary.copy(alpha = 0.08f), MaterialTheme.colorScheme.surface))
             ).padding(24.dp)
         ) {
             Column(
@@ -188,14 +176,14 @@ private fun HeroProfileCard(jamaah: Jamaah) {
             ) {
                 // Large Avatar
                 Box(
-                    modifier = Modifier.size(80.dp).clip(CircleShape).background(BrandGold.copy(alpha = 0.15f)),
+                    modifier = Modifier.size(80.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = jamaah.nama.take(1).uppercase(),
                         style = MaterialTheme.typography.headlineLarge,
                         fontWeight = FontWeight.ExtraBold,
-                        color = BrandGold
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
                 
@@ -205,14 +193,14 @@ private fun HeroProfileCard(jamaah: Jamaah) {
                     text = jamaah.nama,
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
-                    color = TextPrimary,
+                    color = MaterialTheme.colorScheme.onSurface,
                     textAlign = TextAlign.Center
                 )
                 
                 Text(
                     text = jamaah.program,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = TextSecondary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -220,11 +208,11 @@ private fun HeroProfileCard(jamaah: Jamaah) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     StatusBadge(status = jamaah.status)
                     if (jamaah.pelunasan) {
-                        Surface(shape = RoundedCornerShape(8.dp), color = SuccessGreen.copy(alpha = 0.1f)) {
+                        Surface(shape = RoundedCornerShape(8.dp), color = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.1f)) {
                             Row(modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp), verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Default.Verified, null, tint = SuccessGreen, modifier = Modifier.size(12.dp))
+                                Icon(Icons.Default.Verified, null, tint = MaterialTheme.colorScheme.tertiary, modifier = Modifier.size(12.dp))
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Text("LUNAS", style = MaterialTheme.typography.labelSmall, color = SuccessGreen, fontWeight = FontWeight.Bold)
+                                Text("LUNAS", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.tertiary, fontWeight = FontWeight.Bold)
                             }
                         }
                     }
@@ -241,16 +229,16 @@ private fun StatusSection(jamaah: Jamaah) {
             label = "Status",
             value = jamaah.status.uppercase(),
             color = when(jamaah.status.lowercase()) {
-                "pending" -> WarningAmber
-                "approved" -> SuccessGreen
-                else -> ErrorRed
+                "pending" -> MaterialTheme.colorScheme.secondary
+                "approved", "verified" -> MaterialTheme.colorScheme.tertiary
+                else -> MaterialTheme.colorScheme.error
             },
             modifier = Modifier.weight(1f)
         )
         InfoMiniCard(
             label = "Pelunasan",
             value = if (jamaah.pelunasan) "LUNAS" else "BELUM LUNAS",
-            color = if (jamaah.pelunasan) SuccessGreen else ErrorRed,
+            color = if (jamaah.pelunasan) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.error,
             modifier = Modifier.weight(1f)
         )
     }
@@ -265,7 +253,7 @@ private fun InfoMiniCard(label: String, value: String, color: Color, modifier: M
         border = BorderStroke(1.dp, color.copy(alpha = 0.1f))
     ) {
         Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(label, style = MaterialTheme.typography.labelSmall, color = TextSecondary)
+            Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(modifier = Modifier.height(4.dp))
             Text(value, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = color)
         }
@@ -283,36 +271,37 @@ private fun PaymentCard(jamaah: Jamaah, hargaPaket: Long, onAddPayment: () -> Un
         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Column {
-                    Text("Total Harga Paket", style = MaterialTheme.typography.labelSmall, color = TextMuted)
-                    Text(format.format(hargaPaket).replace(",00",""), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = TextPrimary)
+                    Text("Total Harga Paket", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f))
+                    Text(format.format(hargaPaket).replace(",00",""), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                 }
-                Box(modifier = Modifier.size(40.dp).clip(CircleShape).background(BrandGold.copy(alpha = 0.1f)).clickable { onAddPayment() }, contentAlignment = Alignment.Center) {
-                    Icon(Icons.Default.Add, null, tint = BrandGold)
+                Box(modifier = Modifier.size(40.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)).clickable { onAddPayment() }, contentAlignment = Alignment.Center) {
+                    Icon(Icons.Default.Add, null, tint = MaterialTheme.colorScheme.primary)
                 }
             }
             
             Column {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text("Sudah Dibayar", style = MaterialTheme.typography.labelSmall, color = TextSecondary)
-                    Text("${(progress * 100).toInt()}%", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = BrandGold)
+                    Text("Sudah Dibayar", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("${(progress * 100).toInt()}%", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                 }
                 Spacer(modifier = Modifier.height(8.dp))
                 LinearProgressIndicator(
                     progress = { progress },
                     modifier = Modifier.fillMaxWidth().height(8.dp).clip(CircleShape),
-                    color = BrandGold,
-                    trackColor = BrandGold.copy(alpha = 0.1f)
+                    color = MaterialTheme.colorScheme.primary,
+                    trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
                 )
             }
             
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Text("Telah Dibayar (DP)", style = MaterialTheme.typography.labelSmall, color = TextMuted)
-                    Text(format.format(jamaah.dp).replace(",00",""), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold, color = SuccessGreen)
+                    Text("Telah Dibayar (DP)", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f))
+                    Text(format.format(jamaah.dp).replace(",00",""), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.tertiary)
                 }
                 Column(modifier = Modifier.weight(1f)) {
-                    Text("Sisa Tagihan", style = MaterialTheme.typography.labelSmall, color = TextMuted)
-                    Text(format.format(remaining).replace(",00",""), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold, color = if (remaining > 0) ErrorRed else SuccessGreen)
+                    Text("Sisa Tagihan", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f))
+                    val color = if (remaining > 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.tertiary
+                    Text(format.format(remaining).replace(",00",""), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold, color = color)
                 }
             }
             
@@ -320,11 +309,11 @@ private fun PaymentCard(jamaah: Jamaah, hargaPaket: Long, onAddPayment: () -> Un
                 onClick = onAddPayment,
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = BrandGold)
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
             ) {
-                Icon(Icons.Default.AddCard, null, modifier = Modifier.size(18.dp))
+                Icon(Icons.Default.AddCard, null, modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onPrimary)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Tambah Pembayaran")
+                Text("Tambah Pembayaran", color = MaterialTheme.colorScheme.onPrimary)
             }
         }
     }
@@ -359,7 +348,7 @@ private fun ProgramCard(jamaah: Jamaah, paket: com.agunganamiroh.data.model.Pake
                 DetailItem("Sisa Seat", "${paket.sisaSeat} Seat")
             } else {
                 DetailItem("Keberangkatan", jamaah.keberangkatan)
-                Text("Memuat informasi paket tambahan...", style = MaterialTheme.typography.labelSmall, color = BrandGold)
+                Text("Memuat informasi paket tambahan...", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
             }
             DetailItem("Nomor Paspor", jamaah.noPaspor.ifBlank { "Belum ada" })
         }
@@ -385,11 +374,11 @@ private fun DocItem(label: String, isUploaded: Boolean) {
         Icon(
             imageVector = if (isUploaded) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
             contentDescription = null,
-            tint = if (isUploaded) SuccessGreen else TextMuted,
+            tint = if (isUploaded) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
             modifier = Modifier.size(20.dp)
         )
         Spacer(modifier = Modifier.width(12.dp))
-        Text(label, style = MaterialTheme.typography.bodyMedium, color = if (isUploaded) TextPrimary else TextMuted)
+        Text(label, style = MaterialTheme.typography.bodyMedium, color = if (isUploaded) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
@@ -399,7 +388,7 @@ private fun AdditionalRequestCard(request: String) {
         Text(
             text = request.ifBlank { "Tidak ada permintaan tambahan." },
             style = MaterialTheme.typography.bodyMedium,
-            color = if (request.isBlank()) TextMuted else TextPrimary,
+            color = if (request.isBlank()) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f) else MaterialTheme.colorScheme.onSurface,
             fontStyle = if (request.isBlank()) androidx.compose.ui.text.font.FontStyle.Italic else androidx.compose.ui.text.font.FontStyle.Normal
         )
     }
@@ -412,23 +401,23 @@ private fun ActionSection(onEdit: () -> Unit, onDelete: () -> Unit) {
             onClick = onEdit,
             modifier = Modifier.fillMaxWidth().height(56.dp),
             shape = RoundedCornerShape(16.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = BrandGold)
+            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
         ) {
-            Icon(Icons.Default.Edit, null)
+            Icon(Icons.Default.Edit, null, tint = MaterialTheme.colorScheme.onPrimary)
             Spacer(modifier = Modifier.width(8.dp))
-            Text("EDIT DATA JAMAAH", fontWeight = FontWeight.Bold)
+            Text("EDIT DATA JAMAAH", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimary)
         }
         
         OutlinedButton(
             onClick = onDelete,
             modifier = Modifier.fillMaxWidth().height(56.dp),
             shape = RoundedCornerShape(16.dp),
-            colors = ButtonDefaults.outlinedButtonColors(contentColor = ErrorRed),
-            border = BorderStroke(1.dp, ErrorRed.copy(alpha = 0.5f))
+            colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.5f))
         ) {
-            Icon(Icons.Default.Delete, null)
+            Icon(Icons.Default.Delete, null, tint = MaterialTheme.colorScheme.error)
             Spacer(modifier = Modifier.width(8.dp))
-            Text("HAPUS JAMAAH", fontWeight = FontWeight.Bold)
+            Text("HAPUS JAMAAH", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.error)
         }
     }
 }
@@ -436,8 +425,8 @@ private fun ActionSection(onEdit: () -> Unit, onDelete: () -> Unit) {
 @Composable
 private fun DetailItem(label: String, value: String) {
     Column {
-        Text(label, style = MaterialTheme.typography.labelSmall, color = TextMuted)
-        Text(value, style = MaterialTheme.typography.bodyLarge, color = TextPrimary, fontWeight = FontWeight.Medium)
+        Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f))
+        Text(value, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Medium)
     }
 }
 
@@ -445,16 +434,16 @@ private fun DetailItem(label: String, value: String) {
 private fun SectionCard(title: String, icon: ImageVector, content: @Composable () -> Unit) {
     Column {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(icon, null, tint = BrandGold, modifier = Modifier.size(18.dp))
+            Icon(icon, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
             Spacer(modifier = Modifier.width(8.dp))
-            Text(title, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.ExtraBold, color = BrandGold, letterSpacing = 1.sp)
+            Text(title, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.primary, letterSpacing = 1.sp)
         }
         Spacer(modifier = Modifier.height(12.dp))
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(containerColor = SurfaceWhite),
-            border = BorderStroke(1.dp, Color(0xFFF3F4F6))
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.1f))
         ) {
             Box(modifier = Modifier.padding(20.dp)) {
                 content()
@@ -481,17 +470,17 @@ private fun PaymentBottomSheet(
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
-        containerColor = SurfaceWhite,
-        dragHandle = { BottomSheetDefaults.DragHandle(color = BrandGold.copy(alpha = 0.3f)) }
+        containerColor = MaterialTheme.colorScheme.surface,
+        dragHandle = { BottomSheetDefaults.DragHandle(color = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)) }
     ) {
         Column(modifier = Modifier.fillMaxWidth().padding(24.dp).padding(bottom = 32.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
-            Text("Tambah Pembayaran", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = BrandGold)
+            Text("Tambah Pembayaran", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
             
-            Card(colors = CardDefaults.cardColors(containerColor = AppBackground)) {
+            Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))) {
                 Column(modifier = Modifier.padding(16.dp).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text("Sisa Pembayaran", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
-                        Text(format.format(remaining).replace(",00",""), fontWeight = FontWeight.Bold, color = ErrorRed)
+                        Text("Sisa Pembayaran", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(format.format(remaining).replace(",00",""), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.error)
                     }
                 }
             }
@@ -503,11 +492,16 @@ private fun PaymentBottomSheet(
                 modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 shape = RoundedCornerShape(12.dp),
-                prefix = { Text("Rp ") }
+                prefix = { Text("Rp ") },
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                    focusedLabelColor = MaterialTheme.colorScheme.primary
+                )
             )
             
             Column {
-                Text("Metode Pembayaran", style = MaterialTheme.typography.labelMedium, color = TextSecondary)
+                Text("Metode Pembayaran", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     methods.forEach { method ->
@@ -515,7 +509,12 @@ private fun PaymentBottomSheet(
                             selected = selectedMethod == method,
                             onClick = { selectedMethod = method },
                             label = { Text(method) },
-                            shape = RoundedCornerShape(12.dp)
+                            shape = RoundedCornerShape(12.dp),
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = MaterialTheme.colorScheme.primary,
+                                selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                                labelColor = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         )
                     }
                 }
@@ -526,7 +525,12 @@ private fun PaymentBottomSheet(
                 onValueChange = { notes = it },
                 label = { Text("Catatan / No. Referensi") },
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(12.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                    focusedLabelColor = MaterialTheme.colorScheme.primary
+                )
             )
             
             Button(
@@ -536,10 +540,10 @@ private fun PaymentBottomSheet(
                 },
                 modifier = Modifier.fillMaxWidth().height(56.dp),
                 shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = BrandGold),
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                 enabled = amount.isNotEmpty()
             ) {
-                Text("KONFIRMASI PEMBAYARAN", fontWeight = FontWeight.Bold)
+                Text("KONFIRMASI PEMBAYARAN", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimary)
             }
         }
     }
@@ -549,24 +553,28 @@ private fun PaymentBottomSheet(
 private fun DeleteConfirmDialog(onDismiss: () -> Unit, onConfirm: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Hapus Data Jamaah?") },
-        text = { Text("Tindakan ini tidak dapat dibatalkan. Semua data terkait jamaah ini akan dihapus secara permanen.") },
+        title = { Text("Hapus Data Jamaah?", color = MaterialTheme.colorScheme.onSurface) },
+        text = { Text("Tindakan ini tidak dapat dibatalkan. Semua data terkait jamaah ini akan dihapus secara permanen.", color = MaterialTheme.colorScheme.onSurfaceVariant) },
         confirmButton = {
-            Button(onClick = onConfirm, colors = ButtonDefaults.buttonColors(containerColor = ErrorRed)) { Text("Hapus") }
+            Button(onClick = onConfirm, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)) { 
+                Text("Hapus", color = MaterialTheme.colorScheme.onError)
+            }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Batal") }
+            TextButton(onClick = onDismiss) { 
+                Text("Batal", color = MaterialTheme.colorScheme.onSurfaceVariant) 
+            }
         },
-        containerColor = SurfaceWhite
+        containerColor = MaterialTheme.colorScheme.surface
     )
 }
 
 @Composable
 private fun StatusBadge(status: String) {
     val color = when (status.lowercase()) {
-        "pending" -> WarningAmber
-        "approved" -> SuccessGreen
-        else -> ErrorRed
+        "pending" -> MaterialTheme.colorScheme.secondary
+        "approved", "verified" -> MaterialTheme.colorScheme.tertiary
+        else -> MaterialTheme.colorScheme.error
     }
     Surface(shape = RoundedCornerShape(8.dp), color = color.copy(alpha = 0.1f)) {
         Text(
@@ -582,7 +590,7 @@ private fun StatusBadge(status: String) {
 @Composable
 private fun LoadingState() {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        CircularProgressIndicator(color = BrandGold)
+        CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
     }
 }
 
@@ -590,19 +598,24 @@ private fun LoadingState() {
 private fun ErrorState(error: String, onRetry: () -> Unit) {
     Box(modifier = Modifier.fillMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Icon(Icons.Default.ErrorOutline, null, modifier = Modifier.size(64.dp), tint = ErrorRed)
+            Icon(Icons.Default.ErrorOutline, null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.error)
             Spacer(modifier = Modifier.height(16.dp))
-            Text("Terjadi Kesalahan", fontWeight = FontWeight.Bold)
-            Text(error, textAlign = TextAlign.Center, color = TextSecondary)
+            Text("Terjadi Kesalahan", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+            Text(error, textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(modifier = Modifier.height(24.dp))
-            Button(onClick = onRetry) { Text("Coba Lagi") }
+            Button(onClick = onRetry, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)) { 
+                Text("Coba Lagi", color = MaterialTheme.colorScheme.onPrimary) 
+            }
         }
     }
 }
 
 @Composable
 private fun IslamicPatternOverlay() {
-    Canvas(modifier = Modifier.fillMaxSize().alpha(0.04f)) {
+    val patternColor = MaterialTheme.colorScheme.primary
+    val backgroundColor = MaterialTheme.colorScheme.background
+    val opacity = if (backgroundColor.luminance() < 0.5f) 0.06f else 0.04f
+    Canvas(modifier = Modifier.fillMaxSize().alpha(opacity)) {
         val sizePx = 60.dp.toPx()
         for (x in 0..(size.width / sizePx).toInt()) {
             for (y in 0..(size.height / sizePx).toInt()) {
@@ -620,7 +633,7 @@ private fun IslamicPatternOverlay() {
                         lineTo(cx - sizePx * 0.12f, cy - sizePx * 0.12f)
                         close()
                     },
-                    color = BrandGold,
+                    color = patternColor,
                     style = Stroke(width = 1.dp.toPx())
                 )
             }
