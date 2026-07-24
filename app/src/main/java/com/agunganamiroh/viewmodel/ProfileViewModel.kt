@@ -1,70 +1,124 @@
 package com.agunganamiroh.viewmodel
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.agunganamiroh.data.model.User
+import com.agunganamiroh.data.preferences.NotificationPreferenceManager
+import com.agunganamiroh.data.preferences.NotificationPrefs
 import com.agunganamiroh.data.repository.ProfileRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-data class ProfileUiState(
-    val isLoading: Boolean = false,
+data class AccountCenterState(
+    val isLoading: Boolean = true,
     val user: User? = null,
+    val jamaahCount: Int = 0,
+    val jamaahApproved: Int = 0,
+    val jamaahPending: Int = 0,
+    val invoiceCount: Int = 0,
+    val invoicePaid: Int = 0,
+    val totalRevenue: Long = 0,
+    val notificationPrefs: NotificationPrefs = NotificationPrefs(),
     val error: String? = null,
     val updateSuccess: Boolean = false,
     val passwordChangeSuccess: Boolean = false,
     val logoutSuccess: Boolean = false
 )
 
-class ProfileViewModel : ViewModel() {
+class ProfileViewModel(application: Application) : AndroidViewModel(application) {
     private val repository = ProfileRepository()
+    private val notificationManager = NotificationPreferenceManager(application)
 
-    private val _uiState = MutableStateFlow(ProfileUiState())
-    val uiState: StateFlow<ProfileUiState> = _uiState.asStateFlow()
+    private val _state = MutableStateFlow(AccountCenterState())
+    val state: StateFlow<AccountCenterState> = _state.asStateFlow()
+
+    val notificationPrefs = notificationManager.notificationPrefs
+
+    private var userJob: kotlinx.coroutines.Job? = null
+    private var jamaahJob: kotlinx.coroutines.Job? = null
+    private var invoiceJob: kotlinx.coroutines.Job? = null
 
     init {
-        loadProfile()
+        loadData()
     }
 
-    fun loadProfile() {
-        val uid = repository.getCurrentUserUid()
-        if (uid == null) {
-            _uiState.value = _uiState.value.copy(error = "Not authenticated")
-            return
-        }
-
-        viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
-            repository.loadProfile(uid).fold(
-                onSuccess = { user ->
-                    _uiState.value = _uiState.value.copy(isLoading = false, user = user)
-                },
-                onFailure = { e ->
-                    _uiState.value = _uiState.value.copy(isLoading = false, error = e.message)
-                }
-            )
-        }
-    }
-
-    fun updateProfile(fullName: String, phoneNumber: String, branch: String) {
+    private fun loadData() {
         val uid = repository.getCurrentUserUid() ?: return
-        
+        val email = repository.getCurrentUserEmail() ?: return
+
+        userJob?.cancel()
+        userJob = viewModelScope.launch {
+            repository.observeUser(uid).collect { result ->
+                result.fold(
+                    onSuccess = { user ->
+                        _state.update { it.copy(isLoading = false, user = user) }
+                    },
+                    onFailure = { e ->
+                        _state.update { it.copy(isLoading = false, error = e.message) }
+                    }
+                )
+            }
+        }
+
+        jamaahJob?.cancel()
+        jamaahJob = viewModelScope.launch {
+            repository.observeJamaahCount(email).collect { result ->
+                result.fold(
+                    onSuccess = { list ->
+                        val approved = list.count { it.status.equals("approved", true) || it.status.equals("verified", true) }
+                        val pending = list.count { it.status.equals("pending", true) }
+                        _state.update {
+                            it.copy(
+                                jamaahCount = list.size,
+                                jamaahApproved = approved,
+                                jamaahPending = pending
+                            )
+                        }
+                    },
+                    onFailure = { }
+                )
+            }
+        }
+
+        invoiceJob?.cancel()
+        invoiceJob = viewModelScope.launch {
+            repository.observeInvoiceCount(email).collect { result ->
+                result.fold(
+                    onSuccess = { list ->
+                        val paid = list.count { it.status == "paid" }
+                        val totalRevenue = list.filter { it.status == "paid" }.sumOf { it.totalTagihan }
+                        _state.update {
+                            it.copy(
+                                invoiceCount = list.size,
+                                invoicePaid = paid,
+                                totalRevenue = totalRevenue
+                            )
+                        }
+                    },
+                    onFailure = { }
+                )
+            }
+        }
+    }
+
+    fun updateProfile(fullName: String, phoneNumber: String, address: String) {
+        val uid = repository.getCurrentUserUid() ?: return
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, error = null, updateSuccess = false)
-            val updates = mapOf(
-                "fullName" to fullName,
-                "phoneNumber" to phoneNumber,
-                "branch" to branch
-            )
+            _state.update { it.copy(isLoading = true, error = null, updateSuccess = false) }
+            val updates = mutableMapOf<String, Any>()
+            if (fullName.isNotBlank()) updates["fullName"] = fullName
+            if (phoneNumber.isNotBlank()) updates["phoneNumber"] = phoneNumber
+            updates["address"] = address
             repository.updateProfile(uid, updates).fold(
                 onSuccess = {
-                    _uiState.value = _uiState.value.copy(isLoading = false, updateSuccess = true)
-                    loadProfile()
+                    _state.update { it.copy(isLoading = false, updateSuccess = true) }
                 },
                 onFailure = { e ->
-                    _uiState.value = _uiState.value.copy(isLoading = false, error = e.message)
+                    _state.update { it.copy(isLoading = false, error = e.message) }
                 }
             )
         }
@@ -72,28 +126,49 @@ class ProfileViewModel : ViewModel() {
 
     fun changePassword(oldPass: String, newPass: String) {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, error = null, passwordChangeSuccess = false)
+            _state.update { it.copy(isLoading = true, error = null, passwordChangeSuccess = false) }
             repository.changePassword(oldPass, newPass).fold(
                 onSuccess = {
-                    _uiState.value = _uiState.value.copy(isLoading = false, passwordChangeSuccess = true)
+                    _state.update { it.copy(isLoading = false, passwordChangeSuccess = true) }
                 },
                 onFailure = { e ->
-                    _uiState.value = _uiState.value.copy(isLoading = false, error = e.message)
+                    _state.update { it.copy(isLoading = false, error = e.message) }
                 }
             )
         }
     }
 
+    fun setPushNotifications(enabled: Boolean) {
+        viewModelScope.launch { notificationManager.setPushEnabled(enabled) }
+    }
+
+    fun setPaymentNotifications(enabled: Boolean) {
+        viewModelScope.launch { notificationManager.setPaymentEnabled(enabled) }
+    }
+
+    fun setInvoiceNotifications(enabled: Boolean) {
+        viewModelScope.launch { notificationManager.setInvoiceEnabled(enabled) }
+    }
+
+    fun setApprovalNotifications(enabled: Boolean) {
+        viewModelScope.launch { notificationManager.setApprovalEnabled(enabled) }
+    }
+
     fun logout() {
         repository.logout()
-        _uiState.value = _uiState.value.copy(logoutSuccess = true)
+        _state.update { it.copy(logoutSuccess = true) }
     }
 
     fun clearStatus() {
-        _uiState.value = _uiState.value.copy(
-            error = null,
-            updateSuccess = false,
-            passwordChangeSuccess = false
-        )
+        _state.update {
+            it.copy(error = null, updateSuccess = false, passwordChangeSuccess = false)
+        }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        userJob?.cancel()
+        jamaahJob?.cancel()
+        invoiceJob?.cancel()
     }
 }

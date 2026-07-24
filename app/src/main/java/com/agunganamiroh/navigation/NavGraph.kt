@@ -13,7 +13,7 @@ import com.agunganamiroh.motion.NavigationMotion
 import com.agunganamiroh.ui.screen.auth.LoginScreen
 import com.agunganamiroh.ui.screen.admin.AdminDashboardScreen
 import com.agunganamiroh.ui.screen.agent.AgentDashboardScreen
-import com.agunganamiroh.ui.screen.agent.AgentProfileScreen
+import com.agunganamiroh.ui.screen.account.AccountCenterScreen
 import com.agunganamiroh.ui.screen.agent.InputJamaahScreen
 import com.agunganamiroh.ui.screen.agent.DataJamaahScreen
 import com.agunganamiroh.ui.screen.agent.DetailJamaahScreen
@@ -102,13 +102,13 @@ fun NavGraph() {
         }
 
         composable(
-            route = "profil_agent",
+            route = "account_center",
             enterTransition = NavigationMotion.enterTransition,
             exitTransition = NavigationMotion.exitTransition,
             popEnterTransition = NavigationMotion.popEnterTransition,
             popExitTransition = NavigationMotion.popExitTransition
         ) {
-            AgentProfileScreen(
+            AccountCenterScreen(
                 navController = navController
             )
         }
