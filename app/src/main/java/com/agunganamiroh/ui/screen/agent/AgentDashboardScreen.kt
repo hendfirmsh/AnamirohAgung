@@ -164,7 +164,7 @@ fun AgentDashboardScreen(
             MenuItem("Pembayaran", "Verifikasi & riwayat bayar", Icons.Default.Payments, "pembayaran"),
             MenuItem("Invoice", "Cetak & kirim tagihan", Icons.Default.Receipt, "agent_invoice_list"),
             MenuItem("Riwayat", "Laporan aktivitas agent", Icons.Default.History, "riwayat"),
-            MenuItem("Profil", "Pengaturan akun agent", Icons.Default.Person, "profil_agent")
+            MenuItem("Profil", "Pengaturan akun agent", Icons.Default.Person, "account_center")
         )
     }
 
@@ -345,7 +345,7 @@ private fun DashboardTopBar(
                         DropdownMenuItem(
                             text = { Text("Profil Saya", color = MaterialTheme.colorScheme.onSurface) },
                             leadingIcon = { Icon(Icons.Default.Person, null, tint = MaterialTheme.colorScheme.primary) },
-                            onClick = { showMenu = false; onNavigate("profil_agent") }
+                            onClick = { showMenu = false; onNavigate("account_center") }
                         )
                         HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp), color = MaterialTheme.colorScheme.outline)
                         DropdownMenuItem(

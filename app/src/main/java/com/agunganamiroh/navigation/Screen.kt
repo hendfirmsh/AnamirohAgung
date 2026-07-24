@@ -36,4 +36,7 @@ sealed class Screen(
         fun createRoute(id: String) = "admin_create_invoice/$id"
     }
 
+    object AccountCenter :
+        Screen("account_center")
+
 }
