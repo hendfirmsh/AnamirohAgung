@@ -20,4 +20,20 @@ sealed class Screen(
         fun createRoute(id: String) = "detail_jamaah/$id"
     }
 
+    object AgentInvoiceList :
+        Screen("agent_invoice_list")
+
+    object AgentInvoiceDetail :
+        Screen("agent_invoice_detail/{id}") {
+        fun createRoute(id: String) = "agent_invoice_detail/$id"
+    }
+
+    object AdminInvoiceList :
+        Screen("admin_invoice_list")
+
+    object AdminCreateInvoice :
+        Screen("admin_create_invoice/{id}") {
+        fun createRoute(id: String) = "admin_create_invoice/$id"
+    }
+
 }

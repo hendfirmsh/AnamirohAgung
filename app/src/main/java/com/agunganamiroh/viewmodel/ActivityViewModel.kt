@@ -25,7 +25,7 @@ class ActivityViewModel : ViewModel() {
         observeActivities()
     }
 
-    private fun observeActivities() {
+    fun observeActivities() {
         val email = auth.currentUser?.email ?: return
         _uiState.update { it.copy(loading = true) }
 

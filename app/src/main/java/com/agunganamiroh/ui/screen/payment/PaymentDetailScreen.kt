@@ -43,6 +43,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.agunganamiroh.data.model.Jamaah
 import com.agunganamiroh.data.model.Pembayaran
+import com.agunganamiroh.motion.*
 import com.agunganamiroh.viewmodel.PembayaranViewModel
 import kotlinx.coroutines.delay
 import java.text.NumberFormat
@@ -136,8 +137,8 @@ fun PaymentDetailScreen(
         ) { paddingValues ->
             val jamaah = uiState.selectedJamaah
             if (uiState.loading && jamaah == null) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
+                    DetailSkeleton()
                 }
             } else if (jamaah != null) {
                 AnimatedVisibility(
@@ -151,14 +152,15 @@ fun PaymentDetailScreen(
                         contentPadding = PaddingValues(20.dp, 8.dp, 20.dp, 100.dp),
                         verticalArrangement = Arrangement.spacedBy(24.dp)
                     ) {
-                        item { ProfileCard(jamaah) }
-                        item { PaymentSummaryCard(jamaah) }
+                        item { ProfileCard(jamaah = jamaah) }
+                        item { PaymentSummaryCard(jamaah = jamaah) }
                         item {
                             Text(
                                 "Riwayat Pembayaran",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface
+                                color = MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.animateEntrance(200)
                             )
                         }
 
@@ -280,6 +282,7 @@ private fun ProfileCard(jamaah: Jamaah) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
+            .animateEntrance(0)
             .scale(scale)
             .clickable(interactionSource = interactionSource, indication = null) { },
         shape = RoundedCornerShape(24.dp),
@@ -406,7 +409,9 @@ private fun PaymentSummaryCard(jamaah: Jamaah) {
     val animatedProgress by animateFloatAsState(targetValue = progressValue, animationSpec = tween(durationMillis = 1200), label = "progress")
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .animateEntrance(100),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
@@ -535,15 +540,11 @@ private fun PaymentSummaryCard(jamaah: Jamaah) {
 @Composable
 private fun PaymentHistoryItem(payment: Pembayaran) {
     val format = NumberFormat.getCurrencyInstance(Locale("id", "ID"))
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-    val scale by animateFloatAsState(if (isPressed) 0.98f else 1f, tween(120), label = "historyScale")
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .scale(scale)
-            .clickable(interactionSource = interactionSource, indication = null) { },
+            .bounceClick(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
@@ -770,7 +771,8 @@ fun AddPaymentBottomSheet(
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp),
+                    .height(56.dp)
+                    .bounceClick(),
                 enabled = nominal.isNotEmpty() && (nominal.filter { it.isDigit() }.toLongOrNull() ?: 0L) > 0 && (nominal.filter { it.isDigit() }.toLongOrNull() ?: 0L) <= maxAmount,
                 shape = RoundedCornerShape(16.dp)
             ) {

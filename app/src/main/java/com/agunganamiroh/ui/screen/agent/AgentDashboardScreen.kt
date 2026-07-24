@@ -6,11 +6,12 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
+
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -52,10 +53,12 @@ import com.agunganamiroh.viewmodel.AuthViewModel
 import com.agunganamiroh.viewmodel.JamaahViewModel
 import com.agunganamiroh.viewmodel.PaketViewModel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import com.agunganamiroh.motion.*
 
 // ============================================================
 // UI MODELS
@@ -86,6 +89,7 @@ data class QuickAction(
 // ============================================================
 // MAIN SCREEN
 // ============================================================
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AgentDashboardScreen(
     navController: NavController,
@@ -121,6 +125,10 @@ fun AgentDashboardScreen(
         isVisible = true
     }
 
+    var isRefreshing by remember { mutableStateOf(false) }
+    val refreshScope = rememberCoroutineScope()
+    val pullRefreshState = rememberPullToRefreshState()
+
     // Prepare Stats Data
     val stats = remember(jamaahState.jamaahs, primaryColor, warningColor, successColor) {
         val jamaahs = jamaahState.jamaahs
@@ -129,8 +137,8 @@ fun AgentDashboardScreen(
         val approved = jamaahs.count { it.status.lowercase() == "approved" || it.status.lowercase() == "verified" }
         val omzet = jamaahs.sumOf { it.dp }
         
-        val format = NumberFormat.getCurrencyInstance(Locale("id", "ID"))
-        val omzetFormatted = format.format(omzet).replace(",00", "")
+        val currencyFormat = NumberFormat.getCurrencyInstance(Locale("id", "ID"))
+        val omzetFormatted = currencyFormat.format(omzet).replace(",00", "")
 
         listOf(
             StatItem("Jamaah Saya", total.toString(), Icons.Default.Group, primaryColor, "+5%"),
@@ -144,7 +152,7 @@ fun AgentDashboardScreen(
         listOf(
             QuickAction("Tambah Jamaah Baru", "Pendaftaran data jamaah baru", Icons.Default.PersonAdd, "input_jamaah"),
             QuickAction("Pembayaran", "Input bukti bayar jamaah", Icons.Default.Payments, "pembayaran"),
-            QuickAction("Invoice", "Buat tagihan untuk jamaah", Icons.AutoMirrored.Filled.ReceiptLong, "invoice"),
+            QuickAction("Invoice", "Lihat tagihan jamaah", Icons.AutoMirrored.Filled.ReceiptLong, "agent_invoice_list"),
             QuickAction("Data Jamaah", "Lihat daftar jamaah", Icons.Default.AssignmentInd, "data_jamaah")
         )
     }
@@ -154,7 +162,7 @@ fun AgentDashboardScreen(
             MenuItem("Input Jamaah", "Pendaftaran jamaah baru", Icons.Default.PersonAdd, "input_jamaah"),
             MenuItem("Data Jamaah", "Kelola database jamaah", Icons.Default.AssignmentInd, "data_jamaah", 3),
             MenuItem("Pembayaran", "Verifikasi & riwayat bayar", Icons.Default.Payments, "pembayaran"),
-            MenuItem("Invoice", "Cetak & kirim tagihan", Icons.Default.Receipt, "invoice"),
+            MenuItem("Invoice", "Cetak & kirim tagihan", Icons.Default.Receipt, "agent_invoice_list"),
             MenuItem("Riwayat", "Laporan aktivitas agent", Icons.Default.History, "riwayat"),
             MenuItem("Profil", "Pengaturan akun agent", Icons.Default.Person, "profil_agent")
         )
@@ -198,54 +206,72 @@ fun AgentDashboardScreen(
                 visible = isVisible,
                 enter = fadeIn(tween(600)) + slideInVertically(tween(600)) { it / 10 }
             ) {
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues),
-                    contentPadding = PaddingValues(bottom = 32.dp),
-                    verticalArrangement = Arrangement.spacedBy(24.dp)
-                ) {
-                    item {
-                        DashboardHeroCard(
-                            target = 30,
-                            achievement = jamaahState.jamaahs.size
-                        )
-                    }
-
-                    item {
-                        QuickActionSection(
-                            actions = quickActions,
-                            onActionClick = { route -> navController.navigate(route) }
-                        )
-                    }
-
-                    item {
-                        StatisticsSection(stats = stats, isLoading = jamaahState.loading)
-                    }
-
-                    item {
-                        UpcomingPackageSection(
-                            paketList = paketState.pakets,
-                            isLoading = paketState.loading,
-                            onDetailClick = { paket ->
-                                selectedPaketForDetail = paket
-                                showPaketSheet = true
+                PullToRefreshBox(
+                    isRefreshing = isRefreshing,
+                    onRefresh = {
+                        authState.user?.email?.let { email ->
+                            refreshScope.launch {
+                                isRefreshing = true
+                                jamaahViewModel.loadJamaahByAgent(email)
+                                paketViewModel.observePakets()
+                                activityViewModel.observeActivities()
+                                delay(300)
+                                isRefreshing = false
                             }
-                        )
-                    }
+                        }
+                    },
+                    state = pullRefreshState,
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(paddingValues),
+                        contentPadding = PaddingValues(bottom = 32.dp),
+                        verticalArrangement = Arrangement.spacedBy(24.dp)
+                    ) {
+                        item {
+                            DashboardHeroCard(
+                                target = 30,
+                                achievement = jamaahState.jamaahs.size
+                            )
+                        }
 
-                    item {
-                        ActivitySection(
-                            activities = activityState.activities,
-                            isLoading = activityState.loading
-                        )
-                    }
+                        item {
+                            QuickActionSection(
+                                actions = quickActions,
+                                onActionClick = { route -> navController.navigate(route) }
+                            )
+                        }
 
-                    item {
-                        MenuSection(
-                            menuItems = menuItems,
-                            onMenuClick = { route -> navController.navigate(route) }
-                        )
+                        item {
+                            StatisticsSection(stats = stats, isLoading = jamaahState.loading)
+                        }
+
+                        item {
+                            UpcomingPackageSection(
+                                paketList = paketState.pakets,
+                                isLoading = paketState.loading,
+                                onDetailClick = { paket ->
+                                    selectedPaketForDetail = paket
+                                    showPaketSheet = true
+                                }
+                            )
+                        }
+
+                        item {
+                            ActivitySection(
+                                activities = activityState.activities,
+                                isLoading = activityState.loading
+                            )
+                        }
+
+                        item {
+                            MenuSection(
+                                menuItems = menuItems,
+                                onMenuClick = { route -> navController.navigate(route) }
+                            )
+                        }
                     }
                 }
             }
@@ -355,7 +381,7 @@ private fun DashboardHeroCard(target: Int, achievement: Int) {
     val percentage = (progressValue * 100).toInt()
 
     Card(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp).height(160.dp),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp).height(160.dp).animateEntrance(0),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
@@ -417,11 +443,7 @@ private fun QuickActionSection(actions: List<QuickAction>, onActionClick: (Strin
 
 @Composable
 private fun QuickActionCard(action: QuickAction, onClick: () -> Unit) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-    val scale by animateFloatAsState(if (isPressed) 0.98f else 1f, tween(120), label = "")
-
-    Card(modifier = Modifier.fillMaxWidth().scale(scale).clickable(interactionSource = interactionSource, indication = null) { onClick() }, shape = RoundedCornerShape(20.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)) {
+    Card(modifier = Modifier.fillMaxWidth().bounceClick().clickable { onClick() }, shape = RoundedCornerShape(20.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)) {
         Row(modifier = Modifier.padding(16.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Box(modifier = Modifier.size(48.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)), contentAlignment = Alignment.Center) {
                 Icon(imageVector = action.icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))
@@ -455,7 +477,7 @@ private fun StatisticsSection(stats: List<StatItem>, isLoading: Boolean = false)
 
 @Composable
 private fun StatCard(stat: StatItem, modifier: Modifier = Modifier, isLoading: Boolean = false) {
-    Card(modifier = modifier, shape = RoundedCornerShape(20.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)) {
+    Card(modifier = modifier.animateEntrance(0), shape = RoundedCornerShape(20.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Box(modifier = Modifier.size(32.dp).clip(CircleShape).background(stat.color.copy(alpha = 0.1f)), contentAlignment = Alignment.Center) {
@@ -469,9 +491,7 @@ private fun StatCard(stat: StatItem, modifier: Modifier = Modifier, isLoading: B
             }
             Spacer(modifier = Modifier.height(12.dp))
             if (isLoading) {
-                Box(modifier = Modifier.fillMaxWidth().height(28.dp), contentAlignment = Alignment.CenterStart) {
-                    CircularProgressIndicator(modifier = Modifier.size(20.dp), color = MaterialTheme.colorScheme.primary, strokeWidth = 2.dp)
-                }
+                DashboardStatSkeleton()
             } else {
                 Text(text = stat.value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.onSurface)
             }
@@ -511,7 +531,7 @@ private fun UpcomingPackageSection(
 
 @Composable
 private fun PackageCard(paket: com.agunganamiroh.data.model.Paket, onDetailClick: (com.agunganamiroh.data.model.Paket) -> Unit) {
-    Card(modifier = Modifier.width(260.dp).clickable { onDetailClick(paket) }, shape = RoundedCornerShape(20.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), elevation = CardDefaults.cardElevation(defaultElevation = 2.dp), border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))) {
+    Card(modifier = Modifier.width(260.dp).bounceClick().clickable { onDetailClick(paket) }, shape = RoundedCornerShape(20.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), elevation = CardDefaults.cardElevation(defaultElevation = 2.dp), border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))) {
         Column(modifier = Modifier.padding(16.dp)) {
             val isAvailable = paket.sisaSeat > 0
             val statusColor = if (isAvailable) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.error
@@ -635,11 +655,7 @@ private fun MenuSection(menuItems: List<MenuItem>, onMenuClick: (String) -> Unit
 
 @Composable
 private fun MenuCard(item: MenuItem, modifier: Modifier = Modifier, onClick: () -> Unit) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-    val scale by animateFloatAsState(if (isPressed) 0.97f else 1f, tween(120), label = "")
-
-    Card(modifier = modifier.scale(scale).clickable(interactionSource = interactionSource, indication = null) { onClick() }, shape = RoundedCornerShape(18.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)) {
+    Card(modifier = modifier.bounceClick().clickable { onClick() }, shape = RoundedCornerShape(18.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Top) {
                 Box(modifier = Modifier.size(40.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primary.copy(alpha = 0.05f)), contentAlignment = Alignment.Center) {
