@@ -9,6 +9,8 @@ import com.agunganamiroh.ui.screen.agent.AgentProfileScreen
 import com.agunganamiroh.ui.screen.agent.InputJamaahScreen
 import com.agunganamiroh.ui.screen.agent.DataJamaahScreen
 import com.agunganamiroh.ui.screen.agent.DetailJamaahScreen
+import com.agunganamiroh.ui.screen.payment.PaymentScreen
+import com.agunganamiroh.ui.screen.payment.PaymentDetailScreen
 import androidx.navigation.navArgument
 import androidx.navigation.NavType
 
@@ -101,7 +103,15 @@ fun NavGraph() {
         }
 
         composable(route = "pembayaran") {
-            // Placeholder
+            PaymentScreen(navController = navController)
+        }
+
+        composable(
+            route = "payment_detail/{id}",
+            arguments = listOf(navArgument("id") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val id = backStackEntry.arguments?.getString("id") ?: ""
+            PaymentDetailScreen(navController = navController, jamaahId = id)
         }
 
         composable(route = "invoice") {

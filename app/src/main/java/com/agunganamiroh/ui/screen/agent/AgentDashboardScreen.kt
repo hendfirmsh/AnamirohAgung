@@ -47,6 +47,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.agunganamiroh.viewmodel.ActivityViewModel
 import com.agunganamiroh.viewmodel.AuthViewModel
 import com.agunganamiroh.viewmodel.JamaahViewModel
 import com.agunganamiroh.viewmodel.PaketViewModel
@@ -90,11 +91,13 @@ fun AgentDashboardScreen(
     navController: NavController,
     authViewModel: AuthViewModel = viewModel(),
     paketViewModel: PaketViewModel = viewModel(),
-    jamaahViewModel: JamaahViewModel = viewModel()
+    jamaahViewModel: JamaahViewModel = viewModel(),
+    activityViewModel: ActivityViewModel = viewModel()
 ) {
     val authState by authViewModel.uiState.collectAsStateWithLifecycle()
     val paketState by paketViewModel.uiState.collectAsStateWithLifecycle()
     val jamaahState by jamaahViewModel.uiState.collectAsStateWithLifecycle()
+    val activityState by activityViewModel.uiState.collectAsStateWithLifecycle()
 
     var selectedPaketForDetail by remember { mutableStateOf<com.agunganamiroh.data.model.Paket?>(null) }
     var showPaketSheet by remember { mutableStateOf(false) }
@@ -233,8 +236,8 @@ fun AgentDashboardScreen(
 
                     item {
                         ActivitySection(
-                            activities = jamaahState.activities,
-                            isLoading = jamaahState.loading
+                            activities = activityState.activities,
+                            isLoading = activityState.loading
                         )
                     }
 
@@ -540,7 +543,7 @@ private fun ShimmerPackageCard() {
 }
 
 @Composable
-private fun ActivitySection(activities: List<com.agunganamiroh.viewmodel.Activity>, isLoading: Boolean) {
+private fun ActivitySection(activities: List<com.agunganamiroh.data.model.Activity>, isLoading: Boolean) {
     Column(modifier = Modifier.padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             Text(text = "Aktivitas Terbaru", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
@@ -565,12 +568,15 @@ private fun ActivitySection(activities: List<com.agunganamiroh.viewmodel.Activit
 }
 
 @Composable
-private fun ActivityItem(activity: com.agunganamiroh.viewmodel.Activity, isLast: Boolean) {
+private fun ActivityItem(activity: com.agunganamiroh.data.model.Activity, isLast: Boolean) {
     Row(modifier = Modifier.fillMaxWidth()) {
         val color = when(activity.type) {
-            "registration" -> MaterialTheme.colorScheme.primary
-            "status" -> if(activity.status == "approved") MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.secondary
-            "payment" -> MaterialTheme.colorScheme.tertiary
+            "JAMAAH_CREATED" -> MaterialTheme.colorScheme.primary
+            "JAMAAH_UPDATED" -> MaterialTheme.colorScheme.secondary
+            "JAMAAH_DELETED" -> MaterialTheme.colorScheme.error
+            "PAYMENT_ADDED" -> MaterialTheme.colorScheme.tertiary
+            "PAYMENT_COMPLETED" -> MaterialTheme.colorScheme.tertiary
+            "INVOICE_CREATED" -> MaterialTheme.colorScheme.primary
             else -> MaterialTheme.colorScheme.primary
         }
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -583,9 +589,9 @@ private fun ActivityItem(activity: com.agunganamiroh.viewmodel.Activity, isLast:
         Column(modifier = Modifier.weight(1f)) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text(text = activity.title, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
-                Text(text = getRelativeTime(activity.time), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f))
+                Text(text = getRelativeTime(activity.createdAt?.toDate()?.time ?: 0L), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f))
             }
-            Text(text = activity.subtitle, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(text = activity.description, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(modifier = Modifier.height(16.dp))
         }
     }

@@ -1,0 +1,36 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "activity",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "agentEmail", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "pembayaran",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "jamaahId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "pembayaran",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "agentEmail", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "jamaah",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "input_by", "order": "ASCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

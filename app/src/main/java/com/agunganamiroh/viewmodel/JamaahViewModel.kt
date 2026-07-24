@@ -4,29 +4,19 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.agunganamiroh.data.model.Jamaah
 import com.agunganamiroh.data.repository.JamaahRepository
+import com.agunganamiroh.data.repository.PembayaranRepository
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.Timestamp
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import android.util.Log
-import java.text.NumberFormat
 import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
-
-data class Activity(
-    val id: String,
-    val title: String,
-    val subtitle: String,
-    val time: Long,
-    val type: String, // "registration", "status", "payment"
-    val status: String = ""
-)
+import java.util.*
 
 data class JamaahUiState(
     val loading: Boolean = false,
     val jamaahs: List<Jamaah> = emptyList(),
-    val activities: List<Activity> = emptyList(),
     val error: String? = null,
     val searchQuery: String = "",
     val selectedFilter: String = "Semua",
@@ -38,15 +28,14 @@ data class JamaahUiState(
 
 class JamaahViewModel : ViewModel() {
     val repository = JamaahRepository()
+    private val pembayaranRepository = PembayaranRepository()
     private val auth = FirebaseAuth.getInstance()
 
     private val _uiState = MutableStateFlow(JamaahUiState())
     val uiState: StateFlow<JamaahUiState> = _uiState.asStateFlow()
 
     private val _allJamaahs = MutableStateFlow<List<Jamaah>>(emptyList())
-    private val _recentPayments = MutableStateFlow<List<com.agunganamiroh.data.model.Pembayaran>>(emptyList())
     private var jamaahJob: Job? = null
-    private var globalPaymentsJob: Job? = null
     private var detailJob: Job? = null
     private var paketJob: Job? = null
     private var paymentsJob: Job? = null
@@ -58,7 +47,7 @@ class JamaahViewModel : ViewModel() {
     private fun observeJamaah() {
         val user = auth.currentUser
         Log.d("JamaahViewModel", "Auth Check: UID=${user?.uid}, Email=${user?.email}, Name=${user?.displayName}")
-        
+
         user?.email?.let { email ->
             loadJamaahByAgent(email)
         } ?: run {
@@ -69,9 +58,8 @@ class JamaahViewModel : ViewModel() {
     fun loadJamaahByAgent(agentEmail: String) {
         Log.d("JamaahViewModel", "Loading jamaah for agent: $agentEmail")
         jamaahJob?.cancel()
-        globalPaymentsJob?.cancel()
         _uiState.update { it.copy(loading = true) }
-        
+
         jamaahJob = repository.getJamaahRealtime(agentEmail)
             .onEach { result ->
                 result.fold(
@@ -87,19 +75,6 @@ class JamaahViewModel : ViewModel() {
                 )
             }
             .launchIn(viewModelScope)
-
-        globalPaymentsJob = repository.getGlobalPaymentsByAgent(agentEmail)
-            .onEach { result ->
-                result.fold(
-                    onSuccess = { list ->
-                        _recentPayments.value = list
-                        filterData()
-                    },
-                    onFailure = { e ->
-                        Log.e("JamaahViewModel", "Error loading global payments: ${e.message}")
-                    }
-                )
-            }.launchIn(viewModelScope)
     }
 
     fun onSearchQueryChange(query: String) {
@@ -138,59 +113,7 @@ class JamaahViewModel : ViewModel() {
             matchesSearch && matchesFilter
         }
 
-        // Generate activities from data
-        val activities = mutableListOf<Activity>()
-        
-        // 1. From Jamaah Documents (Registration & Status)
-        _allJamaahs.value.forEach { jamaah ->
-            // Registration
-            activities.add(
-                Activity(
-                    id = "reg_${jamaah.id}",
-                    title = "Pendaftaran Baru",
-                    subtitle = jamaah.nama,
-                    time = jamaah.id.toLongOrNull() ?: 0L,
-                    type = "registration"
-                )
-            )
-            
-            // Status update (simulated based on status)
-            if (jamaah.status.lowercase() != "pending") {
-                activities.add(
-                    Activity(
-                        id = "stat_${jamaah.id}",
-                        title = "Jamaah ${jamaah.status.uppercase()}",
-                        subtitle = jamaah.nama,
-                        time = (jamaah.id.toLongOrNull() ?: 0L) + 5000,
-                        type = "status",
-                        status = jamaah.status
-                    )
-                )
-            }
-        }
-
-        // 2. From Global Payments
-        _recentPayments.value.forEach { payment ->
-            val jamaahName = _allJamaahs.value.find { it.id == payment.jamaahId }?.nama ?: "Jamaah"
-            val format = NumberFormat.getCurrencyInstance(Locale("id", "ID"))
-            val amountFormatted = format.format(payment.jumlah).replace(",00", "")
-            
-            activities.add(
-                Activity(
-                    id = "pay_${payment.id}",
-                    title = "Pembayaran Diterima",
-                    subtitle = "$jamaahName • +$amountFormatted",
-                    time = try { 
-                        SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).parse(payment.tanggal)?.time ?: 0L 
-                    } catch (e: Exception) { 0L },
-                    type = "payment"
-                )
-            )
-        }
-
-        val sortedActivities = activities.sortedByDescending { it.time }.take(10)
-
-        _uiState.update { it.copy(jamaahs = filteredList, activities = sortedActivities, loading = false) }
+        _uiState.update { it.copy(jamaahs = filteredList, loading = false) }
     }
 
     fun deleteJamaah(id: String) {
@@ -210,7 +133,6 @@ class JamaahViewModel : ViewModel() {
                 result.fold(
                     onSuccess = { jamaah ->
                         _uiState.update { it.copy(selectedJamaah = jamaah, loading = false) }
-                        // Start observing paket when jamaah is loaded
                         if (jamaah.paketId.isNotEmpty()) {
                             observePaket(jamaah.paketId)
                         }
@@ -255,23 +177,20 @@ class JamaahViewModel : ViewModel() {
         notes: String
     ) {
         val jamaah = _uiState.value.selectedJamaah ?: return
-        val limit = if (jamaah.hargaPaket > 0) jamaah.hargaPaket else 0L
-        
-        val newTotalDp = jamaah.dp + amount
-        val isLunas = newTotalDp >= limit && limit > 0
 
         val pembayaran = com.agunganamiroh.data.model.Pembayaran(
             jamaahId = jamaah.id,
-            jumlah = amount,
-            tanggal = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date()),
-            keterangan = notes,
-            status = "success",
-            dibuatOleh = auth.currentUser?.email ?: "system"
+            nominal = amount,
+            tanggal = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date()),
+            catatan = notes,
+            metode = method,
+            agentEmail = auth.currentUser?.email ?: "system",
+            createdAt = Timestamp.now()
         )
 
         viewModelScope.launch {
             _uiState.update { it.copy(loading = true) }
-            repository.addPayment(jamaah.id, pembayaran, newTotalDp, isLunas).fold(
+            pembayaranRepository.addPayment(pembayaran).fold(
                 onSuccess = {
                     _uiState.update { it.copy(loading = false, updateSuccess = true) }
                 },
@@ -318,5 +237,8 @@ class JamaahViewModel : ViewModel() {
                 }
             )
         }
+    }
+    fun clearError() {
+        _uiState.update { it.copy(error = null) }
     }
 }
