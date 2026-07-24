@@ -54,6 +54,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.agunganamiroh.data.model.Jamaah
+import com.agunganamiroh.motion.*
 import com.agunganamiroh.viewmodel.AuthViewModel
 import com.agunganamiroh.viewmodel.JamaahViewModel
 import com.agunganamiroh.viewmodel.PaketViewModel
@@ -492,7 +493,10 @@ fun InputJamaahScreen(
 @Composable
 private fun RegistrationHeader() {
     Card(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp)
+            .animateEntrance(0),
         shape = RoundedCornerShape(28.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
@@ -971,7 +975,11 @@ private fun StickySaveButton(isLoading: Boolean, isSuccess: Boolean, isEdit: Boo
         Box(modifier = Modifier.padding(20.dp)) {
             Button(
                 onClick = onClick,
-                modifier = Modifier.fillMaxWidth().height(58.dp).scale(scale),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(58.dp)
+                    .scale(scale)
+                    .bounceClick(),
                 shape = RoundedCornerShape(24.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                 enabled = !isLoading && !isSuccess,

@@ -36,6 +36,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.agunganamiroh.data.model.User
+import com.agunganamiroh.motion.*
 import com.agunganamiroh.ui.theme.ThemeMode
 import com.agunganamiroh.viewmodel.ProfileViewModel
 import com.agunganamiroh.viewmodel.ThemeViewModel
@@ -200,8 +201,8 @@ fun AgentProfileScreen(
         }
 
         if (uiState.isLoading) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+            Box(modifier = Modifier.fillMaxSize()) {
+                DetailSkeleton()
             }
         }
     }
@@ -215,7 +216,8 @@ private fun ProfileHeader(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp),
+            .padding(horizontal = 20.dp)
+            .animateEntrance(0),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
@@ -310,7 +312,8 @@ private fun ProfileStatistics(user: User?) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp),
+            .padding(horizontal = 20.dp)
+            .animateEntrance(80),
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         StatMiniCard(
@@ -359,7 +362,7 @@ private fun StatMiniCard(label: String, value: String, icon: ImageVector, modifi
 @Composable
 private fun InformationSection(user: User?) {
     Column(
-        modifier = Modifier.padding(horizontal = 20.dp),
+        modifier = Modifier.padding(horizontal = 20.dp).animateEntrance(80),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Text(
@@ -427,7 +430,7 @@ private fun InformationItem(icon: ImageVector, title: String, value: String) {
 @Composable
 private fun AppearanceSection(currentTheme: ThemeMode, onThemeClick: () -> Unit) {
     Column(
-        modifier = Modifier.padding(horizontal = 20.dp),
+        modifier = Modifier.padding(horizontal = 20.dp).animateEntrance(80),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Text(
@@ -464,7 +467,7 @@ private fun SettingsSection(
     onChangePassword: () -> Unit
 ) {
     Column(
-        modifier = Modifier.padding(horizontal = 20.dp),
+        modifier = Modifier.padding(horizontal = 20.dp).animateEntrance(80),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Text(
@@ -504,6 +507,7 @@ private fun SettingsItem(icon: ImageVector, title: String, subtitle: String? = n
         modifier = Modifier
             .fillMaxWidth()
             .scale(scale)
+            .bounceClick()
             .clickable(interactionSource = interactionSource, indication = null) { onClick() }
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -526,7 +530,8 @@ private fun DangerZone(onLogout: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp),
+            .padding(horizontal = 20.dp)
+            .animateEntrance(80),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.error.copy(alpha = 0.05f)),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
@@ -534,6 +539,7 @@ private fun DangerZone(onLogout: () -> Unit) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .bounceClick()
                 .clickable { onLogout() }
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically

@@ -6,13 +6,15 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,7 +34,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.agunganamiroh.data.model.Jamaah
+import com.agunganamiroh.motion.*
 import com.agunganamiroh.viewmodel.PembayaranViewModel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.text.NumberFormat
 import java.util.*
 
@@ -43,6 +48,9 @@ fun PaymentScreen(
     viewModel: PembayaranViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    var isRefreshing by remember { mutableStateOf(false) }
+    val refreshScope = rememberCoroutineScope()
+    val pullRefreshState = rememberPullToRefreshState()
 
     Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         IslamicPatternOverlay()
@@ -78,17 +86,33 @@ fun PaymentScreen(
                     onFilterChange = { viewModel.onFilterChange(it) }
                 )
 
-                if (uiState.loading) {
-                    LoadingState()
-                } else if (uiState.filteredJamaahs.isEmpty()) {
-                    EmptyState()
-                } else {
-                    PaymentList(
-                        jamaahs = uiState.filteredJamaahs,
-                        onItemClick = { id ->
-                            navController.navigate("payment_detail/$id")
+                PullToRefreshBox(
+                    isRefreshing = isRefreshing,
+                    onRefresh = {
+                        refreshScope.launch {
+                            isRefreshing = true
+                            viewModel.loadJamaahs()
+                            delay(400)
+                            isRefreshing = false
                         }
-                    )
+                    },
+                    state = pullRefreshState,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        if (uiState.loading) {
+                            LoadingState()
+                        } else if (uiState.filteredJamaahs.isEmpty()) {
+                            EmptyState()
+                        } else {
+                            PaymentList(
+                                jamaahs = uiState.filteredJamaahs,
+                                onItemClick = { id ->
+                                    navController.navigate("payment_detail/$id")
+                                }
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -203,10 +227,11 @@ private fun PaymentList(
         contentPadding = PaddingValues(20.dp, 8.dp, 20.dp, 32.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        items(jamaahs, key = { it.id }) { jamaah ->
+        itemsIndexed(jamaahs, key = { _, jamaah -> jamaah.id }) { index, jamaah ->
             PaymentCard(
                 jamaah = jamaah,
-                onClick = { onItemClick(jamaah.id) }
+                onClick = { onItemClick(jamaah.id) },
+                modifier = Modifier.staggerItem(index, 60)
             )
         }
     }
@@ -215,14 +240,16 @@ private fun PaymentList(
 @Composable
 private fun PaymentCard(
     jamaah: Jamaah,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val format = NumberFormat.getCurrencyInstance(Locale("id", "ID"))
     val progress = if (jamaah.hargaPaket > 0) (jamaah.dp.toFloat() / jamaah.hargaPaket.toFloat()).coerceIn(0f, 1f) else 0f
 
     Card(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
+            .bounceClick()
             .clickable { onClick() },
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -338,8 +365,8 @@ private fun StatusBadge(text: String, color: Color) {
 
 @Composable
 private fun LoadingState() {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+    Box(modifier = Modifier.fillMaxSize()) {
+        ListCardSkeleton()
     }
 }
 

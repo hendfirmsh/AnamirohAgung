@@ -12,5 +12,6 @@ data class Pembayaran(
     val tanggal: String = "",
     val metode: String = "",
     val catatan: String = "",
+    val invoiceId: String = "",
     val createdAt: Timestamp? = null
 )
