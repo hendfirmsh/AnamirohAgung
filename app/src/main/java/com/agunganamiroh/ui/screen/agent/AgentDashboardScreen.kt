@@ -49,6 +49,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.agunganamiroh.viewmodel.ActivityViewModel
+import com.agunganamiroh.viewmodel.NotificationViewModel
 import com.agunganamiroh.viewmodel.AuthViewModel
 import com.agunganamiroh.viewmodel.JamaahViewModel
 import com.agunganamiroh.viewmodel.PaketViewModel
@@ -96,12 +97,14 @@ fun AgentDashboardScreen(
     authViewModel: AuthViewModel = viewModel(),
     paketViewModel: PaketViewModel = viewModel(),
     jamaahViewModel: JamaahViewModel = viewModel(),
-    activityViewModel: ActivityViewModel = viewModel()
+    activityViewModel: ActivityViewModel = viewModel(),
+    notificationViewModel: NotificationViewModel = viewModel()
 ) {
     val authState by authViewModel.uiState.collectAsStateWithLifecycle()
     val paketState by paketViewModel.uiState.collectAsStateWithLifecycle()
     val jamaahState by jamaahViewModel.uiState.collectAsStateWithLifecycle()
     val activityState by activityViewModel.uiState.collectAsStateWithLifecycle()
+    val notificationState by notificationViewModel.state.collectAsStateWithLifecycle()
 
     var selectedPaketForDetail by remember { mutableStateOf<com.agunganamiroh.data.model.Paket?>(null) }
     var showPaketSheet by remember { mutableStateOf(false) }
@@ -191,6 +194,7 @@ fun AgentDashboardScreen(
             topBar = {
                 DashboardTopBar(
                     agentName = agentName,
+                    notificationState = notificationState,
                     onLogout = {
                         authViewModel.logout()
                         navController.navigate("login") {
@@ -215,6 +219,7 @@ fun AgentDashboardScreen(
                                 jamaahViewModel.loadJamaahByAgent(email)
                                 paketViewModel.observePakets()
                                 activityViewModel.observeActivities()
+                                notificationViewModel.refresh()
                                 delay(300)
                                 isRefreshing = false
                             }
@@ -294,6 +299,7 @@ fun AgentDashboardScreen(
 @Composable
 private fun DashboardTopBar(
     agentName: String,
+    notificationState: com.agunganamiroh.viewmodel.NotificationUiState,
     onLogout: () -> Unit,
     onNavigate: (String) -> Unit
 ) {
@@ -336,7 +342,11 @@ private fun DashboardTopBar(
             }
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                TopBarIcon(icon = Icons.Default.Notifications, hasBadge = true)
+                TopBarIcon(
+                    icon = Icons.Default.Notifications,
+                    hasBadge = notificationState.unreadCount > 0,
+                    onClick = { onNavigate("notification_center") }
+                )
                 TopBarIcon(icon = Icons.AutoMirrored.Filled.Chat)
                 
                 Box {

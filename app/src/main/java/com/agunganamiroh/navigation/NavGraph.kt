@@ -14,6 +14,7 @@ import com.agunganamiroh.ui.screen.auth.LoginScreen
 import com.agunganamiroh.ui.screen.admin.AdminDashboardScreen
 import com.agunganamiroh.ui.screen.agent.AgentDashboardScreen
 import com.agunganamiroh.ui.screen.account.AccountCenterScreen
+import com.agunganamiroh.ui.screen.notification.NotificationCenterScreen
 import com.agunganamiroh.ui.screen.agent.InputJamaahScreen
 import com.agunganamiroh.ui.screen.agent.DataJamaahScreen
 import com.agunganamiroh.ui.screen.agent.DetailJamaahScreen
@@ -224,13 +225,13 @@ fun NavGraph() {
         }
 
         composable(
-            route = "riwayat",
+            route = "notification_center",
             enterTransition = NavigationMotion.enterTransition,
             exitTransition = NavigationMotion.exitTransition,
             popEnterTransition = NavigationMotion.popEnterTransition,
             popExitTransition = NavigationMotion.popExitTransition
         ) {
-            // Placeholder
+            NotificationCenterScreen(navController = navController)
         }
     }
     } // Box

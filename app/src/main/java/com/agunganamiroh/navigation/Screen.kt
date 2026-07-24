@@ -39,4 +39,7 @@ sealed class Screen(
     object AccountCenter :
         Screen("account_center")
 
+    object NotificationCenter :
+        Screen("notification_center")
+
 }

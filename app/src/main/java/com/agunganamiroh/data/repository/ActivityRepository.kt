@@ -29,20 +29,22 @@ class ActivityRepository {
     }
 
     fun getRecentActivities(agentEmail: String, limit: Int = 20): Flow<Result<List<Activity>>> = callbackFlow {
-        val subscription = collection
+        var query = collection
             .whereEqualTo("agentEmail", agentEmail)
             .orderBy("createdAt", Query.Direction.DESCENDING)
-            .limit(limit.toLong())
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    trySend(Result.failure(error))
-                    return@addSnapshotListener
-                }
-                if (snapshot != null) {
-                    val activities = snapshot.toObjects(Activity::class.java)
-                    trySend(Result.success(activities))
-                }
+        if (limit > 0) {
+            query = query.limit(limit.toLong())
+        }
+        val subscription = query.addSnapshotListener { snapshot, error ->
+            if (error != null) {
+                trySend(Result.failure(error))
+                return@addSnapshotListener
             }
+            if (snapshot != null) {
+                val activities = snapshot.toObjects(Activity::class.java)
+                trySend(Result.success(activities))
+            }
+        }
         awaitClose { subscription.remove() }
     }
 
