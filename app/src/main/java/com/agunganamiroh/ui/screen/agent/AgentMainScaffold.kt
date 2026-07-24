@@ -1,14 +1,11 @@
 package com.agunganamiroh.ui.screen.agent
 
-import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.height
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Home
@@ -24,14 +21,21 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.agunganamiroh.navigation.Screen
+
+private const val BAR_HIDE_THRESHOLD = 5f
+private const val BAR_ANIM_DURATION = 250
 
 @Composable
 fun AgentMainScaffold(
@@ -59,54 +63,86 @@ fun AgentMainScaffold(
     )
 
     var selectedTabIndex by remember { mutableStateOf(0) }
+    var showBottomBar by remember { mutableStateOf(true) }
+
+    val currentShowBottomBar by rememberUpdatedState(showBottomBar)
+
+    val nestedScrollConnection = remember {
+        object : NestedScrollConnection {
+            override fun onPreScroll(
+                available: Offset,
+                source: NestedScrollSource
+            ): Offset {
+                val delta = available.y
+                if (delta > BAR_HIDE_THRESHOLD && currentShowBottomBar) {
+                    showBottomBar = false
+                } else if (delta < -BAR_HIDE_THRESHOLD && !currentShowBottomBar) {
+                    showBottomBar = true
+                }
+                return Offset.Zero
+            }
+        }
+    }
 
     Scaffold(
         bottomBar = {
-            NavigationBar(
-                containerColor = MaterialTheme.colorScheme.surface,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 0.dp)
+            AnimatedVisibility(
+                visible = showBottomBar,
+                enter = slideInVertically(
+                    animationSpec = tween(BAR_ANIM_DURATION),
+                    initialOffsetY = { it }
+                ),
+                exit = slideOutVertically(
+                    animationSpec = tween(BAR_ANIM_DURATION),
+                    targetOffsetY = { it }
+                )
             ) {
-                tabs.forEachIndexed { index, tab ->
-                    NavigationBarItem(
-                        icon = {
-                            Icon(
-                                imageVector = if (selectedTabIndex == index) tab.selectedIcon else tab.icon,
-                                contentDescription = tab.label,
-                                tint = if (selectedTabIndex == index) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                NavigationBar(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(80.dp)
+                ) {
+                    tabs.forEachIndexed { index, tab ->
+                        NavigationBarItem(
+                            icon = {
+                                Icon(
+                                    imageVector = if (selectedTabIndex == index) tab.selectedIcon else tab.icon,
+                                    contentDescription = tab.label,
+                                    tint = if (selectedTabIndex == index) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            },
+                            label = {
+                                Text(
+                                    text = tab.label,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            },
+                            selected = selectedTabIndex == index,
+                            onClick = {
+                                selectedTabIndex = index
+                            },
+                            alwaysShowLabel = true,
+                            colors = NavigationBarItemDefaults.colors(
+                                selectedIconColor = MaterialTheme.colorScheme.primary,
+                                selectedTextColor = MaterialTheme.colorScheme.primary,
+                                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                indicatorColor = MaterialTheme.colorScheme.primaryContainer
                             )
-                        },
-                        label = {
-                            Text(
-                                text = tab.label,
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Medium
-                            )
-                        },
-                        selected = selectedTabIndex == index,
-                        onClick = {
-                            selectedTabIndex = index
-                        },
-                        alwaysShowLabel = true,
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = MaterialTheme.colorScheme.primary,
-                            selectedTextColor = MaterialTheme.colorScheme.primary,
-                            unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                            unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                            indicatorColor = MaterialTheme.colorScheme.primaryContainer
                         )
-                    )
+                    }
                 }
             }
         },
         containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         when (selectedTabIndex) {
-            0 -> AgentDashboardScreen(navController = navController)
-            1 -> AgentHistoryScreen(navController = navController)
-            2 -> AgentProfileScreen(navController = navController)
-            else -> AgentDashboardScreen(navController = navController)
+            0 -> AgentDashboardScreen(navController = navController, nestedScrollConnection = nestedScrollConnection)
+            1 -> AgentHistoryScreen(navController = navController, nestedScrollConnection = nestedScrollConnection)
+            2 -> AgentProfileScreen(navController = navController, nestedScrollConnection = nestedScrollConnection)
+            else -> AgentDashboardScreen(navController = navController, nestedScrollConnection = nestedScrollConnection)
         }
     }
 }

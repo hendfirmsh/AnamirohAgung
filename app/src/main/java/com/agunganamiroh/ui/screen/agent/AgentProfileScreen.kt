@@ -26,6 +26,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
@@ -47,6 +48,7 @@ import java.util.*
 @Composable
 fun AgentProfileScreen(
     navController: NavController,
+    nestedScrollConnection: androidx.compose.ui.input.nestedscroll.NestedScrollConnection? = null,
     viewModel: ProfileViewModel = viewModel(),
     themeViewModel: ThemeViewModel = viewModel()
 ) {
@@ -58,6 +60,11 @@ fun AgentProfileScreen(
     var showPasswordDialog by remember { mutableStateOf(false) }
     var showLogoutDialog by remember { mutableStateOf(false) }
     var showThemeDialog by remember { mutableStateOf(false) }
+    var isVisible by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        isVisible = true
+    }
 
     LaunchedEffect(uiState.error) {
         uiState.error?.let {
@@ -120,9 +127,14 @@ fun AgentProfileScreen(
         containerColor = MaterialTheme.colorScheme.background,
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
+        AnimatedVisibility(
+            visible = isVisible,
+            enter = fadeIn(tween(600)) + slideInVertically(tween(600)) { it / 10 }
+        ) {
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
+                .then(if (nestedScrollConnection != null) Modifier.nestedScroll(nestedScrollConnection) else Modifier)
                 .padding(padding),
             contentPadding = PaddingValues(bottom = 32.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp)
@@ -159,6 +171,7 @@ fun AgentProfileScreen(
             item {
                 DangerZone(onLogout = { showLogoutDialog = true })
             }
+        }
         }
 
         // Dialogs

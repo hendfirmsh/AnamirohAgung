@@ -1,7 +1,11 @@
 package com.agunganamiroh.navigation
 
+import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
-import androidx.navigation.compose.*
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.agunganamiroh.ui.screen.auth.LoginScreen
 import com.agunganamiroh.ui.screen.admin.AdminDashboardScreen
 import com.agunganamiroh.ui.screen.agent.AgentDashboardScreen
@@ -14,6 +18,8 @@ import com.agunganamiroh.ui.screen.agent.AgentHistoryScreen
 import androidx.navigation.navArgument
 import androidx.navigation.NavType
 
+private const val DURATION = 300
+
 @Composable
 fun NavGraph() {
 
@@ -22,7 +28,25 @@ fun NavGraph() {
 
     NavHost(
         navController = navController,
-        startDestination = "login"
+        startDestination = "login",
+        enterTransition = {
+            fadeIn(tween(DURATION)) + slideInHorizontally(
+                tween(DURATION),
+                initialOffsetX = { it / 5 }
+            )
+        },
+        exitTransition = {
+            fadeOut(tween(DURATION))
+        },
+        popEnterTransition = {
+            fadeIn(tween(DURATION))
+        },
+        popExitTransition = {
+            fadeOut(tween(DURATION)) + slideOutHorizontally(
+                tween(DURATION),
+                targetOffsetX = { it / 5 }
+            )
+        }
     ) {
 
         composable("login") {

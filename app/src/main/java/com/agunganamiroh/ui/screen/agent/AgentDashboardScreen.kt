@@ -24,6 +24,7 @@ import androidx.compose.material.icons.automirrored.filled.ReceiptLong
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,6 +39,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -47,6 +49,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import com.agunganamiroh.viewmodel.AuthViewModel
 import com.agunganamiroh.viewmodel.JamaahViewModel
 import com.agunganamiroh.viewmodel.PaketViewModel
@@ -75,19 +79,14 @@ data class MenuItem(
     val badge: Int = 0
 )
 
-data class QuickAction(
-    val title: String,
-    val subtitle: String,
-    val icon: ImageVector,
-    val route: String
-)
-
 // ============================================================
 // MAIN SCREEN
 // ============================================================
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AgentDashboardScreen(
     navController: NavController,
+    nestedScrollConnection: androidx.compose.ui.input.nestedscroll.NestedScrollConnection? = null,
     authViewModel: AuthViewModel = viewModel(),
     paketViewModel: PaketViewModel = viewModel(),
     jamaahViewModel: JamaahViewModel = viewModel()
@@ -137,23 +136,10 @@ fun AgentDashboardScreen(
         )
     }
 
-    val quickActions = remember {
-        listOf(
-            QuickAction("Tambah Jamaah Baru", "Pendaftaran data jamaah baru", Icons.Default.PersonAdd, "input_jamaah"),
-            QuickAction("Pembayaran", "Input bukti bayar jamaah", Icons.Default.Payments, "pembayaran"),
-            QuickAction("Invoice", "Buat tagihan untuk jamaah", Icons.AutoMirrored.Filled.ReceiptLong, "invoice"),
-            QuickAction("Data Jamaah", "Lihat daftar jamaah", Icons.Default.AssignmentInd, "data_jamaah")
-        )
-    }
-
     val menuItems = remember {
         listOf(
             MenuItem("Input Jamaah", "Pendaftaran jamaah baru", Icons.Default.PersonAdd, "input_jamaah"),
-            MenuItem("Data Jamaah", "Kelola database jamaah", Icons.Default.AssignmentInd, "data_jamaah", 3),
-            MenuItem("Pembayaran", "Verifikasi & riwayat bayar", Icons.Default.Payments, "pembayaran"),
-            MenuItem("Invoice", "Cetak & kirim tagihan", Icons.Default.Receipt, "invoice"),
-            MenuItem("Riwayat", "Laporan aktivitas agent", Icons.Default.History, "riwayat"),
-            MenuItem("Profil", "Pengaturan akun agent", Icons.Default.Person, "profil_agent")
+            MenuItem("Data Jamaah", "Kelola database jamaah", Icons.Default.AssignmentInd, "data_jamaah", 3)
         )
     }
 
@@ -183,7 +169,7 @@ fun AgentDashboardScreen(
                     onLogout = {
                         authViewModel.logout()
                         navController.navigate("login") {
-                            popUpTo("agent_dashboard") { inclusive = true }
+                            popUpTo("agent_main") { inclusive = true }
                         }
                     },
                     onNavigate = { route -> navController.navigate(route) }
@@ -195,13 +181,33 @@ fun AgentDashboardScreen(
                 visible = isVisible,
                 enter = fadeIn(tween(600)) + slideInVertically(tween(600)) { it / 10 }
             ) {
-                LazyColumn(
+                var isRefreshing by remember { mutableStateOf(false) }
+                val refreshScope = rememberCoroutineScope()
+
+                PullToRefreshBox(
+                    isRefreshing = isRefreshing,
+                    onRefresh = {
+                        isRefreshing = true
+                        refreshScope.launch {
+                            authState.user?.email?.let { email ->
+                                jamaahViewModel.loadJamaahByAgent(email)
+                            }
+                            paketViewModel.observePakets()
+                            delay(600)
+                            isRefreshing = false
+                        }
+                    },
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(paddingValues),
-                    contentPadding = PaddingValues(bottom = 32.dp),
-                    verticalArrangement = Arrangement.spacedBy(24.dp)
+                        .padding(paddingValues)
                 ) {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .then(if (nestedScrollConnection != null) Modifier.nestedScroll(nestedScrollConnection) else Modifier),
+                        contentPadding = PaddingValues(bottom = 32.dp),
+                        verticalArrangement = Arrangement.spacedBy(24.dp)
+                    ) {
                     item {
                         DashboardHeroCard(
                             target = 30,
@@ -239,6 +245,7 @@ fun AgentDashboardScreen(
                     }
                 }
             }
+        }
         }
 
         if (showPaketSheet && selectedPaketForDetail != null) {
@@ -306,12 +313,6 @@ private fun DashboardTopBar(
                 Box {
                     TopBarIcon(icon = Icons.Default.AccountCircle, onClick = { showMenu = true })
                     DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }, modifier = Modifier.background(MaterialTheme.colorScheme.surface)) {
-                        DropdownMenuItem(
-                            text = { Text("Profil Saya", color = MaterialTheme.colorScheme.onSurface) },
-                            leadingIcon = { Icon(Icons.Default.Person, null, tint = MaterialTheme.colorScheme.primary) },
-                            onClick = { showMenu = false; onNavigate("profil_agent") }
-                        )
-                        HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp), color = MaterialTheme.colorScheme.outline)
                         DropdownMenuItem(
                             text = { Text("Logout", color = MaterialTheme.colorScheme.error) },
                             leadingIcon = { Icon(Icons.AutoMirrored.Filled.Logout, null, tint = MaterialTheme.colorScheme.error) },
@@ -389,39 +390,6 @@ private fun DashboardHeroCard(target: Int, achievement: Int) {
                     Text(text = "Ayo capai target bulan ini.", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Medium, lineHeight = 14.sp, fontSize = 11.sp, textAlign = TextAlign.End)
                 }
             }
-        }
-    }
-}
-
-@Composable
-private fun QuickActionSection(actions: List<QuickAction>, onActionClick: (String) -> Unit) {
-    Column(modifier = Modifier.padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text(text = "Aksi Cepat", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            actions.forEach { action ->
-                QuickActionCard(action = action, onClick = { onActionClick(action.route) })
-            }
-        }
-    }
-}
-
-@Composable
-private fun QuickActionCard(action: QuickAction, onClick: () -> Unit) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-    val scale by animateFloatAsState(if (isPressed) 0.98f else 1f, tween(120), label = "")
-
-    Card(modifier = Modifier.fillMaxWidth().scale(scale).clickable(interactionSource = interactionSource, indication = null) { onClick() }, shape = RoundedCornerShape(20.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)) {
-        Row(modifier = Modifier.padding(16.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Box(modifier = Modifier.size(48.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)), contentAlignment = Alignment.Center) {
-                Icon(imageVector = action.icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))
-            }
-            Spacer(modifier = Modifier.width(16.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(text = action.title, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
-                Text(text = action.subtitle, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-            Icon(imageVector = Icons.Default.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f), modifier = Modifier.size(20.dp))
         }
     }
 }
