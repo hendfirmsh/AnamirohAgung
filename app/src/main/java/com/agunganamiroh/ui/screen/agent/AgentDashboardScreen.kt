@@ -37,6 +37,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.TextStyle
@@ -94,6 +95,7 @@ data class QuickAction(
 @Composable
 fun AgentDashboardScreen(
     navController: NavController,
+    nestedScrollConnection: androidx.compose.ui.input.nestedscroll.NestedScrollConnection? = null,
     authViewModel: AuthViewModel = viewModel(),
     paketViewModel: PaketViewModel = viewModel(),
     jamaahViewModel: JamaahViewModel = viewModel(),
@@ -230,6 +232,7 @@ fun AgentDashboardScreen(
                     LazyColumn(
                         modifier = Modifier
                             .fillMaxSize()
+                            .then(if (nestedScrollConnection != null) Modifier.nestedScroll(nestedScrollConnection) else Modifier)
                             .padding(paddingValues),
                         contentPadding = PaddingValues(bottom = 32.dp),
                         verticalArrangement = Arrangement.spacedBy(24.dp)

@@ -16,6 +16,9 @@ import com.agunganamiroh.motion.NavigationMotion
 import com.agunganamiroh.ui.screen.auth.LoginScreen
 import com.agunganamiroh.ui.screen.admin.AdminDashboardScreen
 import com.agunganamiroh.ui.screen.agent.AgentDashboardScreen
+import com.agunganamiroh.ui.screen.agent.AgentHistoryScreen
+import com.agunganamiroh.ui.screen.agent.AgentMainScaffold
+import com.agunganamiroh.ui.screen.agent.AgentProfileScreen
 import com.agunganamiroh.ui.screen.account.AccountCenterScreen
 import com.agunganamiroh.ui.screen.notification.NotificationCenterScreen
 import com.agunganamiroh.ui.screen.agent.InputJamaahScreen
@@ -76,7 +79,7 @@ fun NavGraph() {
 
                         "agent" -> {
                             navController.navigate(
-                                "agent_dashboard"
+                                Screen.AgentMain.route
                             ) {
                                 popUpTo("login") {
                                     inclusive = true
@@ -108,6 +111,36 @@ fun NavGraph() {
             AgentDashboardScreen(
                 navController = navController
             )
+        }
+
+        composable(
+            route = Screen.AgentMain.route,
+            enterTransition = NavigationMotion.enterTransition,
+            exitTransition = NavigationMotion.exitTransition,
+            popEnterTransition = NavigationMotion.popEnterTransition,
+            popExitTransition = NavigationMotion.popExitTransition
+        ) {
+            AgentMainScaffold(navController = navController)
+        }
+
+        composable(
+            route = Screen.AgentHistory.route,
+            enterTransition = NavigationMotion.enterTransition,
+            exitTransition = NavigationMotion.exitTransition,
+            popEnterTransition = NavigationMotion.popEnterTransition,
+            popExitTransition = NavigationMotion.popExitTransition
+        ) {
+            AgentHistoryScreen(navController = navController)
+        }
+
+        composable(
+            route = Screen.AgentProfile.route,
+            enterTransition = NavigationMotion.enterTransition,
+            exitTransition = NavigationMotion.exitTransition,
+            popEnterTransition = NavigationMotion.popEnterTransition,
+            popExitTransition = NavigationMotion.popExitTransition
+        ) {
+            AgentProfileScreen(navController = navController)
         }
 
         composable(
