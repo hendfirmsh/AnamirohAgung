@@ -42,6 +42,9 @@ sealed class Screen(
     object NotificationCenter :
         Screen("notification_center")
 
+    object Riwayat :
+        Screen("riwayat")
+
     object Keberangkatan :
         Screen("keberangkatan")
 
