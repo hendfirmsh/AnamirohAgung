@@ -6,11 +6,12 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
+
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -37,6 +38,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -58,6 +60,7 @@ import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import com.agunganamiroh.motion.*
 
 // ============================================================
 // UI MODELS
@@ -88,14 +91,15 @@ fun AgentDashboardScreen(
     nestedScrollConnection: androidx.compose.ui.input.nestedscroll.NestedScrollConnection? = null,
     authViewModel: AuthViewModel = viewModel(),
     paketViewModel: PaketViewModel = viewModel(),
-    jamaahViewModel: JamaahViewModel = viewModel()
+    jamaahViewModel: JamaahViewModel = viewModel(),
+    activityViewModel: ActivityViewModel = viewModel(),
+    notificationViewModel: NotificationViewModel = viewModel()
 ) {
     val authState by authViewModel.uiState.collectAsStateWithLifecycle()
     val paketState by paketViewModel.uiState.collectAsStateWithLifecycle()
     val jamaahState by jamaahViewModel.uiState.collectAsStateWithLifecycle()
-
-    var selectedPaketForDetail by remember { mutableStateOf<com.agunganamiroh.data.model.Paket?>(null) }
-    var showPaketSheet by remember { mutableStateOf(false) }
+    val activityState by activityViewModel.uiState.collectAsStateWithLifecycle()
+    val notificationState by notificationViewModel.state.collectAsStateWithLifecycle()
 
     val agentName = authState.user?.companyName ?: "Agent Anamiroh"
     
@@ -116,6 +120,10 @@ fun AgentDashboardScreen(
         isVisible = true
     }
 
+    var isRefreshing by remember { mutableStateOf(false) }
+    val refreshScope = rememberCoroutineScope()
+    val pullRefreshState = rememberPullToRefreshState()
+
     // Prepare Stats Data
     val stats = remember(jamaahState.jamaahs, primaryColor, warningColor, successColor) {
         val jamaahs = jamaahState.jamaahs
@@ -124,8 +132,8 @@ fun AgentDashboardScreen(
         val approved = jamaahs.count { it.status.lowercase() == "approved" || it.status.lowercase() == "verified" }
         val omzet = jamaahs.sumOf { it.dp }
         
-        val format = NumberFormat.getCurrencyInstance(Locale("id", "ID"))
-        val omzetFormatted = format.format(omzet).replace(",00", "")
+        val currencyFormat = NumberFormat.getCurrencyInstance(Locale("id", "ID"))
+        val omzetFormatted = currencyFormat.format(omzet).replace(",00", "")
 
         listOf(
             StatItem("Jamaah Saya", total.toString(), Icons.Default.Group, primaryColor, "+5%"),
@@ -165,6 +173,7 @@ fun AgentDashboardScreen(
             topBar = {
                 DashboardTopBar(
                     agentName = agentName,
+                    notificationState = notificationState,
                     onLogout = {
                         authViewModel.logout()
                         navController.navigate("login") {
@@ -247,12 +256,6 @@ fun AgentDashboardScreen(
         }
         }
 
-        if (showPaketSheet && selectedPaketForDetail != null) {
-            PaketDetailBottomSheet(
-                paket = selectedPaketForDetail!!,
-                onDismiss = { showPaketSheet = false }
-            )
-        }
     }
 }
 
@@ -264,6 +267,7 @@ fun AgentDashboardScreen(
 @Composable
 private fun DashboardTopBar(
     agentName: String,
+    notificationState: com.agunganamiroh.viewmodel.NotificationUiState,
     onLogout: () -> Unit,
     onNavigate: (String) -> Unit
 ) {
@@ -306,7 +310,11 @@ private fun DashboardTopBar(
             }
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                TopBarIcon(icon = Icons.Default.Notifications, hasBadge = true)
+                TopBarIcon(
+                    icon = Icons.Default.Notifications,
+                    hasBadge = notificationState.unreadCount > 0,
+                    onClick = { onNavigate("notification_center") }
+                )
                 TopBarIcon(icon = Icons.AutoMirrored.Filled.Chat)
                 
                 Box {
@@ -345,7 +353,7 @@ private fun DashboardHeroCard(target: Int, achievement: Int) {
     val percentage = (progressValue * 100).toInt()
 
     Card(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp).height(160.dp),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp).height(160.dp).animateEntrance(0),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
@@ -412,7 +420,7 @@ private fun StatisticsSection(stats: List<StatItem>, isLoading: Boolean = false)
 
 @Composable
 private fun StatCard(stat: StatItem, modifier: Modifier = Modifier, isLoading: Boolean = false) {
-    Card(modifier = modifier, shape = RoundedCornerShape(20.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)) {
+    Card(modifier = modifier.animateEntrance(0), shape = RoundedCornerShape(20.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Box(modifier = Modifier.size(32.dp).clip(CircleShape).background(stat.color.copy(alpha = 0.1f)), contentAlignment = Alignment.Center) {
@@ -426,9 +434,7 @@ private fun StatCard(stat: StatItem, modifier: Modifier = Modifier, isLoading: B
             }
             Spacer(modifier = Modifier.height(12.dp))
             if (isLoading) {
-                Box(modifier = Modifier.fillMaxWidth().height(28.dp), contentAlignment = Alignment.CenterStart) {
-                    CircularProgressIndicator(modifier = Modifier.size(20.dp), color = MaterialTheme.colorScheme.primary, strokeWidth = 2.dp)
-                }
+                DashboardStatSkeleton()
             } else {
                 Text(text = stat.value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.onSurface)
             }
@@ -441,12 +447,13 @@ private fun StatCard(stat: StatItem, modifier: Modifier = Modifier, isLoading: B
 private fun UpcomingPackageSection(
     paketList: List<com.agunganamiroh.data.model.Paket>,
     isLoading: Boolean,
-    onDetailClick: (com.agunganamiroh.data.model.Paket) -> Unit
+    onDetailClick: (com.agunganamiroh.data.model.Paket) -> Unit,
+    onSeeAllClick: () -> Unit = {}
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             Text(text = "Paket Umroh & Haji", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
-            Text(text = "Lihat Semua", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, modifier = Modifier.clickable { })
+            Text(text = "Lihat Semua", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, modifier = Modifier.clickable { onSeeAllClick() })
         }
         if (isLoading) {
             LazyRow(contentPadding = PaddingValues(horizontal = 20.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -468,7 +475,7 @@ private fun UpcomingPackageSection(
 
 @Composable
 private fun PackageCard(paket: com.agunganamiroh.data.model.Paket, onDetailClick: (com.agunganamiroh.data.model.Paket) -> Unit) {
-    Card(modifier = Modifier.width(260.dp).clickable { onDetailClick(paket) }, shape = RoundedCornerShape(20.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), elevation = CardDefaults.cardElevation(defaultElevation = 2.dp), border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))) {
+    Card(modifier = Modifier.width(260.dp).bounceClick().clickable { onDetailClick(paket) }, shape = RoundedCornerShape(20.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), elevation = CardDefaults.cardElevation(defaultElevation = 2.dp), border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))) {
         Column(modifier = Modifier.padding(16.dp)) {
             val isAvailable = paket.sisaSeat > 0
             val statusColor = if (isAvailable) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.error
@@ -500,11 +507,11 @@ private fun ShimmerPackageCard() {
 }
 
 @Composable
-private fun ActivitySection(activities: List<com.agunganamiroh.viewmodel.Activity>, isLoading: Boolean) {
+private fun ActivitySection(activities: List<com.agunganamiroh.data.model.Activity>, isLoading: Boolean, onSeeAllClick: () -> Unit = {}) {
     Column(modifier = Modifier.padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             Text(text = "Aktivitas Terbaru", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
-            Text(text = "See All", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, modifier = Modifier.clickable { })
+            Text(text = "See All", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, modifier = Modifier.clickable { onSeeAllClick() })
         }
         Card(shape = RoundedCornerShape(24.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)) {
             Column(modifier = Modifier.padding(16.dp)) {
@@ -525,12 +532,15 @@ private fun ActivitySection(activities: List<com.agunganamiroh.viewmodel.Activit
 }
 
 @Composable
-private fun ActivityItem(activity: com.agunganamiroh.viewmodel.Activity, isLast: Boolean) {
+private fun ActivityItem(activity: com.agunganamiroh.data.model.Activity, isLast: Boolean) {
     Row(modifier = Modifier.fillMaxWidth()) {
         val color = when(activity.type) {
-            "registration" -> MaterialTheme.colorScheme.primary
-            "status" -> if(activity.status == "approved") MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.secondary
-            "payment" -> MaterialTheme.colorScheme.tertiary
+            "JAMAAH_CREATED" -> MaterialTheme.colorScheme.primary
+            "JAMAAH_UPDATED" -> MaterialTheme.colorScheme.secondary
+            "JAMAAH_DELETED" -> MaterialTheme.colorScheme.error
+            "PAYMENT_ADDED" -> MaterialTheme.colorScheme.tertiary
+            "PAYMENT_COMPLETED" -> MaterialTheme.colorScheme.tertiary
+            "INVOICE_CREATED" -> MaterialTheme.colorScheme.primary
             else -> MaterialTheme.colorScheme.primary
         }
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -543,9 +553,9 @@ private fun ActivityItem(activity: com.agunganamiroh.viewmodel.Activity, isLast:
         Column(modifier = Modifier.weight(1f)) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text(text = activity.title, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
-                Text(text = getRelativeTime(activity.time), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f))
+                Text(text = getRelativeTime(activity.createdAt?.toDate()?.time ?: 0L), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f))
             }
-            Text(text = activity.subtitle, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(text = activity.description, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(modifier = Modifier.height(16.dp))
         }
     }
@@ -589,11 +599,7 @@ private fun MenuSection(menuItems: List<MenuItem>, onMenuClick: (String) -> Unit
 
 @Composable
 private fun MenuCard(item: MenuItem, modifier: Modifier = Modifier, onClick: () -> Unit) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-    val scale by animateFloatAsState(if (isPressed) 0.97f else 1f, tween(120), label = "")
-
-    Card(modifier = modifier.scale(scale).clickable(interactionSource = interactionSource, indication = null) { onClick() }, shape = RoundedCornerShape(18.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)) {
+    Card(modifier = modifier.bounceClick().clickable { onClick() }, shape = RoundedCornerShape(18.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Top) {
                 Box(modifier = Modifier.size(40.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primary.copy(alpha = 0.05f)), contentAlignment = Alignment.Center) {
@@ -641,60 +647,4 @@ private fun IslamicPatternOverlay() {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun PaketDetailBottomSheet(paket: com.agunganamiroh.data.model.Paket, onDismiss: () -> Unit) {
-    ModalBottomSheet(onDismissRequest = onDismiss, containerColor = MaterialTheme.colorScheme.surface, dragHandle = { BottomSheetDefaults.DragHandle(color = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)) }) {
-        Column(modifier = Modifier.fillMaxWidth().padding(24.dp).padding(bottom = 32.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
-            Text(text = "Detail Paket", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-            Box(modifier = Modifier.fillMaxWidth().height(180.dp).clip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)), contentAlignment = Alignment.Center) {
-                Icon(Icons.Default.Image, null, tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f), modifier = Modifier.size(48.dp))
-                if (paket.brosurName.isNotBlank()) {
-                    Text("Brochure: ${paket.brosurName}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary, modifier = Modifier.align(Alignment.BottomCenter).padding(8.dp))
-                }
-            }
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(paket.title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.onSurface)
-                Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                    DetailBadge(icon = Icons.Default.Timer, text = paket.durasi)
-                    DetailBadge(icon = Icons.Default.Flight, text = paket.maskapai)
-                }
-                HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
-                DetailRow(label = "Tanggal Keberangkatan", value = paket.tanggal, icon = Icons.Default.CalendarToday)
-                DetailRow(label = "Hotel Makkah", value = paket.hotelMakkah, icon = Icons.Default.Hotel)
-                DetailRow(label = "Hotel Madinah", value = paket.hotelMadinah, icon = Icons.Default.Hotel)
-                DetailRow(label = "Sisa Kursi", value = "${paket.sisaSeat} Kursi", icon = Icons.Default.Group)
-                val format = NumberFormat.getCurrencyInstance(Locale("id", "ID"))
-                DetailRow(label = "Harga Paket", value = format.format(paket.harga).replace(",00", ""), icon = Icons.Default.Payments, valueColor = MaterialTheme.colorScheme.primary, isLarge = true)
-            }
-            Button(onClick = onDismiss, modifier = Modifier.fillMaxWidth().height(56.dp), shape = RoundedCornerShape(16.dp), colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)) {
-                Text("TUTUP", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimary)
-            }
-        }
-    }
-}
 
-@Composable
-private fun DetailBadge(icon: ImageVector, text: String) {
-    Surface(shape = RoundedCornerShape(12.dp), color = MaterialTheme.colorScheme.primary.copy(alpha = 0.05f), border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))) {
-        Row(modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-            Icon(icon, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(14.dp))
-            Spacer(modifier = Modifier.width(6.dp))
-            Text(text, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Medium)
-        }
-    }
-}
-
-@Composable
-private fun DetailRow(label: String, value: String, icon: ImageVector, valueColor: Color? = null, isLarge: Boolean = false) {
-    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        Box(modifier = Modifier.size(32.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primary.copy(alpha = 0.05f)), contentAlignment = Alignment.Center) {
-            Icon(icon, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
-        }
-        Spacer(modifier = Modifier.width(16.dp))
-        Column {
-            Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f))
-            Text(text = value, style = if (isLarge) MaterialTheme.typography.titleLarge else MaterialTheme.typography.bodyLarge, fontWeight = if (isLarge) FontWeight.ExtraBold else FontWeight.Bold, color = valueColor ?: MaterialTheme.colorScheme.onSurface)
-        }
-    }
-}

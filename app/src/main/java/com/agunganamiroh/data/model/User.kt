@@ -11,6 +11,10 @@ data class User(
     val branch: String = "",
     val role: String = "agent",
     val photoUrl: String = "",
+    val address: String = "",
+    val agentCode: String = "",
+    val accountStatus: String = "active",
+    val notificationPrefs: Map<String, Boolean> = emptyMap(),
     val createdAt: Timestamp? = null,
     val lastLogin: Timestamp? = null
 )

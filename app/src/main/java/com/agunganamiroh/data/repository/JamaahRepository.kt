@@ -1,8 +1,11 @@
 package com.agunganamiroh.data.repository
 
 import com.agunganamiroh.data.model.Jamaah
+import com.agunganamiroh.data.model.Pembayaran
 import com.agunganamiroh.data.remote.FirebaseModule
-import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.Timestamp
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.Query
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -12,11 +15,13 @@ import android.util.Log
 
 class JamaahRepository {
     private val firestore = FirebaseModule.firestore
+    private val auth = FirebaseAuth.getInstance()
     private val collection = firestore.collection("jamaah")
+    private val activityCollection = firestore.collection("activity")
 
     fun getJamaahRealtime(agentEmail: String): Flow<Result<List<Jamaah>>> = callbackFlow {
         Log.d("JamaahRepository", "Querying Firestore for input_by: $agentEmail")
-        
+
         val subscription = collection
             .whereEqualTo("input_by", agentEmail)
             .addSnapshotListener { snapshot, error ->
@@ -29,15 +34,6 @@ class JamaahRepository {
                 if (snapshot != null) {
                     val jamaahs = snapshot.toObjects(Jamaah::class.java)
                     Log.d("JamaahRepository", "Found ${jamaahs.size} documents")
-                    
-                    if (jamaahs.isEmpty()) {
-                        Log.d("JamaahRepository", "No documents found for $agentEmail")
-                    } else {
-                        jamaahs.forEach { jamaah ->
-                            Log.d("JamaahRepository", "Document: ID=${jamaah.id}, Nama=${jamaah.nama}, Status=${jamaah.status}")
-                        }
-                    }
-
                     trySend(Result.success(jamaahs))
                 }
             }
@@ -47,8 +43,41 @@ class JamaahRepository {
 
     suspend fun addJamaah(jamaah: Jamaah): Result<String> {
         return try {
-            val docRef = collection.add(jamaah).await()
-            Result.success(docRef.id)
+            firestore.runTransaction { transaction ->
+                val docRef = collection.document()
+                val jamaahWithId = jamaah.copy(id = docRef.id)
+                transaction.set(docRef, jamaahWithId)
+                transaction.update(docRef, "createdAt", FieldValue.serverTimestamp())
+
+                val agentEmail = jamaah.input_by.ifBlank { auth.currentUser?.email ?: "unknown" }
+                val agentUid = auth.currentUser?.uid ?: ""
+
+                val activityRef = activityCollection.document()
+                val activity = mapOf<String, Any>(
+                    "activityId" to activityRef.id,
+                    "type" to "JAMAAH_CREATED",
+                    "title" to "Pendaftaran Baru",
+                    "description" to "${jamaah.nama} • ${jamaah.program}",
+                    "jamaahId" to docRef.id,
+                    "jamaahName" to jamaah.nama,
+                    "paymentId" to "",
+                    "invoiceId" to "",
+                    "agentUid" to agentUid,
+                    "agentEmail" to agentEmail,
+                    "amount" to 0L,
+                    "status" to "pending",
+                    "createdAt" to Timestamp.now(),
+                    "metadata" to mapOf<String, Any>(
+                        "program" to jamaah.program,
+                        "dp" to jamaah.dp
+                    )
+                )
+                transaction.set(activityRef, activity)
+
+                docRef.id
+            }.await().let { id ->
+                Result.success(id)
+            }
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -56,16 +85,75 @@ class JamaahRepository {
 
     suspend fun deleteJamaah(id: String): Result<Unit> {
         return try {
-            collection.document(id).delete().await()
+            firestore.runTransaction { transaction ->
+                val jamaahRef = collection.document(id)
+                val jamaahSnapshot = transaction.get(jamaahRef)
+                val jamaah = jamaahSnapshot.toObject(Jamaah::class.java)
+
+                transaction.delete(jamaahRef)
+
+                val agentEmail = auth.currentUser?.email ?: "unknown"
+                val agentUid = auth.currentUser?.uid ?: ""
+
+                val activityRef = activityCollection.document()
+                val activity = mapOf<String, Any>(
+                    "activityId" to activityRef.id,
+                    "type" to "JAMAAH_DELETED",
+                    "title" to "Data Jamaah Dihapus",
+                    "description" to (jamaah?.nama ?: "Unknown"),
+                    "jamaahId" to id,
+                    "jamaahName" to (jamaah?.nama ?: ""),
+                    "paymentId" to "",
+                    "invoiceId" to "",
+                    "agentUid" to agentUid,
+                    "agentEmail" to agentEmail,
+                    "amount" to 0L,
+                    "status" to "deleted",
+                    "createdAt" to Timestamp.now(),
+                    "metadata" to emptyMap<String, Any>()
+                )
+                transaction.set(activityRef, activity)
+            }.await()
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
-    
+
     suspend fun updateJamaah(id: String, updates: Map<String, Any>): Result<Unit> {
         return try {
-            collection.document(id).update(updates).await()
+            firestore.runTransaction { transaction ->
+                val jamaahRef = collection.document(id)
+                val jamaahSnapshot = transaction.get(jamaahRef)
+                val jamaah = jamaahSnapshot.toObject(Jamaah::class.java)
+
+                transaction.update(jamaahRef, updates)
+
+                val agentEmail = auth.currentUser?.email ?: "unknown"
+                val agentUid = auth.currentUser?.uid ?: ""
+
+                val activityRef = activityCollection.document()
+                val changedFields = updates.keys.joinToString(", ")
+                val activity = mapOf<String, Any>(
+                    "activityId" to activityRef.id,
+                    "type" to "JAMAAH_UPDATED",
+                    "title" to "Data Jamaah Diperbarui",
+                    "description" to "${jamaah?.nama ?: "Unknown"} • $changedFields",
+                    "jamaahId" to id,
+                    "jamaahName" to (jamaah?.nama ?: ""),
+                    "paymentId" to "",
+                    "invoiceId" to "",
+                    "agentUid" to agentUid,
+                    "agentEmail" to agentEmail,
+                    "amount" to 0L,
+                    "status" to (updates["status"] as? String ?: jamaah?.status ?: ""),
+                    "createdAt" to Timestamp.now(),
+                    "metadata" to mapOf<String, Any>(
+                        "changedFields" to changedFields
+                    )
+                )
+                transaction.set(activityRef, activity)
+            }.await()
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -93,32 +181,10 @@ class JamaahRepository {
         awaitClose { subscription.remove() }
     }
 
-    suspend fun addPayment(
-        jamaahId: String,
-        pembayaran: com.agunganamiroh.data.model.Pembayaran,
-        newTotalDp: Long,
-        isLunas: Boolean
-    ): Result<Unit> {
-        return try {
-            firestore.runTransaction { transaction ->
-                // 1. Add to payments subcollection
-                val paymentRef = collection.document(jamaahId).collection("payments").document()
-                transaction.set(paymentRef, pembayaran.copy(id = paymentRef.id))
-
-                // 2. Update main jamaah document
-                val jamaahRef = collection.document(jamaahId)
-                transaction.update(jamaahRef, "dp", newTotalDp)
-                transaction.update(jamaahRef, "pelunasan", isLunas)
-            }.await()
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
     fun getPaymentHistory(jamaahId: String): Flow<Result<List<com.agunganamiroh.data.model.Pembayaran>>> = callbackFlow {
-        val subscription = collection.document(jamaahId).collection("payments")
-            .orderBy("tanggal", Query.Direction.DESCENDING)
+        val subscription = firestore.collection("pembayaran")
+            .whereEqualTo("jamaahId", jamaahId)
+            .orderBy("createdAt", Query.Direction.DESCENDING)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
                     trySend(Result.failure(error))
@@ -153,10 +219,27 @@ class JamaahRepository {
         awaitClose { subscription.remove() }
     }
 
-    fun getGlobalPaymentsByAgent(agentEmail: String): Flow<Result<List<com.agunganamiroh.data.model.Pembayaran>>> = callbackFlow {
-        val subscription = firestore.collectionGroup("payments")
-            .whereEqualTo("dibuatOleh", agentEmail)
-            .orderBy("tanggal", Query.Direction.DESCENDING)
+    fun getAllPaymentsByAgent(agentEmail: String): Flow<Result<List<Pembayaran>>> = callbackFlow {
+        val subscription = firestore.collection("pembayaran")
+            .whereEqualTo("agentEmail", agentEmail)
+            .orderBy("createdAt", Query.Direction.DESCENDING)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    trySend(Result.failure(error))
+                    return@addSnapshotListener
+                }
+                if (snapshot != null) {
+                    val payments = snapshot.toObjects(Pembayaran::class.java)
+                    trySend(Result.success(payments))
+                }
+            }
+        awaitClose { subscription.remove() }
+    }
+
+    fun getGlobalPaymentsByAgent(agentEmail: String): Flow<Result<List<Pembayaran>>> = callbackFlow {
+        val subscription = firestore.collection("pembayaran")
+            .whereEqualTo("agentEmail", agentEmail)
+            .orderBy("createdAt", Query.Direction.DESCENDING)
             .limit(10)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {

@@ -9,7 +9,11 @@ import androidx.navigation.compose.rememberNavController
 import com.agunganamiroh.ui.screen.auth.LoginScreen
 import com.agunganamiroh.ui.screen.admin.AdminDashboardScreen
 import com.agunganamiroh.ui.screen.agent.AgentDashboardScreen
+import com.agunganamiroh.ui.screen.agent.AgentHistoryScreen
+import com.agunganamiroh.ui.screen.agent.AgentMainScaffold
 import com.agunganamiroh.ui.screen.agent.AgentProfileScreen
+import com.agunganamiroh.ui.screen.account.AccountCenterScreen
+import com.agunganamiroh.ui.screen.notification.NotificationCenterScreen
 import com.agunganamiroh.ui.screen.agent.InputJamaahScreen
 import com.agunganamiroh.ui.screen.agent.DataJamaahScreen
 import com.agunganamiroh.ui.screen.agent.DetailJamaahScreen
@@ -48,8 +52,18 @@ fun NavGraph() {
             )
         }
     ) {
+        NavHost(
+            navController = navController,
+            startDestination = "login"
+        ) {
 
-        composable("login") {
+        composable(
+            route = "login",
+            enterTransition = NavigationMotion.enterTransition,
+            exitTransition = NavigationMotion.exitTransition,
+            popEnterTransition = NavigationMotion.popEnterTransition,
+            popExitTransition = NavigationMotion.popExitTransition
+        ) {
 
             LoginScreen(
                 onLoginSuccess = { role ->
@@ -80,8 +94,14 @@ fun NavGraph() {
             )
         }
 
-        composable("admin_dashboard") {
-            AdminDashboardScreen()
+        composable(
+            route = "admin_dashboard",
+            enterTransition = NavigationMotion.enterTransition,
+            exitTransition = NavigationMotion.exitTransition,
+            popEnterTransition = NavigationMotion.popEnterTransition,
+            popExitTransition = NavigationMotion.popExitTransition
+        ) {
+            AdminDashboardScreen(navController = navController)
         }
 
         composable(route = Screen.AgentMain.route) {
@@ -95,12 +115,23 @@ fun NavGraph() {
         }
 
         composable(
-            route = "input_jamaah?id={id}",
-            arguments = listOf(navArgument("id") { 
-                type = NavType.StringType
-                nullable = true
-                defaultValue = null
-            })
+            route = "input_jamaah?id={id}&paketId={paketId}",
+            arguments = listOf(
+                navArgument("id") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                },
+                navArgument("paketId") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                }
+            ),
+            enterTransition = NavigationMotion.enterTransition,
+            exitTransition = NavigationMotion.exitTransition,
+            popEnterTransition = NavigationMotion.popEnterTransition,
+            popExitTransition = NavigationMotion.popExitTransition
         ) {
             InputJamaahScreen(
                 navController = navController
@@ -109,7 +140,11 @@ fun NavGraph() {
 
         composable(
             route = "detail_jamaah/{id}",
-            arguments = listOf(navArgument("id") { type = NavType.StringType })
+            arguments = listOf(navArgument("id") { type = NavType.StringType }),
+            enterTransition = NavigationMotion.enterTransition,
+            exitTransition = NavigationMotion.exitTransition,
+            popEnterTransition = NavigationMotion.popEnterTransition,
+            popExitTransition = NavigationMotion.popExitTransition
         ) { backStackEntry ->
             val id = backStackEntry.arguments?.getString("id") ?: ""
             DetailJamaahScreen(
@@ -118,16 +153,152 @@ fun NavGraph() {
             )
         }
 
-        composable(route = "pembayaran") {
-            // Placeholder
+        composable(
+            route = "pembayaran",
+            enterTransition = NavigationMotion.enterTransition,
+            exitTransition = NavigationMotion.exitTransition,
+            popEnterTransition = NavigationMotion.popEnterTransition,
+            popExitTransition = NavigationMotion.popExitTransition
+        ) {
+            PaymentScreen(navController = navController)
         }
 
-        composable(route = "invoice") {
-            // Placeholder
+        composable(
+            route = "payment_detail/{id}",
+            arguments = listOf(navArgument("id") { type = NavType.StringType }),
+            enterTransition = NavigationMotion.enterTransition,
+            exitTransition = NavigationMotion.exitTransition,
+            popEnterTransition = NavigationMotion.popEnterTransition,
+            popExitTransition = NavigationMotion.popExitTransition
+        ) { backStackEntry ->
+            val id = backStackEntry.arguments?.getString("id") ?: ""
+            PaymentDetailScreen(navController = navController, jamaahId = id)
         }
 
-        composable(route = "riwayat") {
-            // Placeholder
+        composable(
+            route = "agent_invoice_list",
+            enterTransition = NavigationMotion.enterTransition,
+            exitTransition = NavigationMotion.exitTransition,
+            popEnterTransition = NavigationMotion.popEnterTransition,
+            popExitTransition = NavigationMotion.popExitTransition
+        ) {
+            AgentInvoiceListScreen(navController = navController)
+        }
+
+        composable(
+            route = "agent_invoice_detail/{id}",
+            arguments = listOf(navArgument("id") { type = NavType.StringType }),
+            enterTransition = NavigationMotion.enterTransition,
+            exitTransition = NavigationMotion.exitTransition,
+            popEnterTransition = NavigationMotion.popEnterTransition,
+            popExitTransition = NavigationMotion.popExitTransition
+        ) { backStackEntry ->
+            val id = backStackEntry.arguments?.getString("id") ?: ""
+            AgentInvoiceDetailScreen(navController = navController, invoiceId = id)
+        }
+
+        composable(
+            route = "admin_invoice_list",
+            enterTransition = NavigationMotion.enterTransition,
+            exitTransition = NavigationMotion.exitTransition,
+            popEnterTransition = NavigationMotion.popEnterTransition,
+            popExitTransition = NavigationMotion.popExitTransition
+        ) {
+            AdminInvoiceListScreen(navController = navController)
+        }
+
+        composable(
+            route = "admin_create_invoice/{id}",
+            arguments = listOf(navArgument("id") { type = NavType.StringType }),
+            enterTransition = NavigationMotion.enterTransition,
+            exitTransition = NavigationMotion.exitTransition,
+            popEnterTransition = NavigationMotion.popEnterTransition,
+            popExitTransition = NavigationMotion.popExitTransition
+        ) { backStackEntry ->
+            val id = backStackEntry.arguments?.getString("id") ?: ""
+            AdminCreateInvoiceScreen(navController = navController, jamaahId = id)
+        }
+
+        composable(
+            route = "package_catalog",
+            enterTransition = NavigationMotion.enterTransition,
+            exitTransition = NavigationMotion.exitTransition,
+            popEnterTransition = NavigationMotion.popEnterTransition,
+            popExitTransition = NavigationMotion.popExitTransition
+        ) {
+            PackageCatalogScreen(navController = navController)
+        }
+
+        composable(
+            route = "package_detail/{paketId}",
+            arguments = listOf(navArgument("paketId") { type = NavType.StringType }),
+            enterTransition = NavigationMotion.enterTransition,
+            exitTransition = NavigationMotion.exitTransition,
+            popEnterTransition = NavigationMotion.popEnterTransition,
+            popExitTransition = NavigationMotion.popExitTransition
+        ) {
+            PackageDetailScreen(navController = navController)
+        }
+
+        composable(
+            route = "keberangkatan",
+            enterTransition = NavigationMotion.enterTransition,
+            exitTransition = NavigationMotion.exitTransition,
+            popEnterTransition = NavigationMotion.popEnterTransition,
+            popExitTransition = NavigationMotion.popExitTransition
+        ) {
+            KeberangkatanScreen(navController = navController)
+        }
+
+        composable(
+            route = "departure_detail/{paketId}",
+            arguments = listOf(navArgument("paketId") { type = NavType.StringType }),
+            enterTransition = NavigationMotion.enterTransition,
+            exitTransition = NavigationMotion.exitTransition,
+            popEnterTransition = NavigationMotion.popEnterTransition,
+            popExitTransition = NavigationMotion.popExitTransition
+        ) { backStackEntry ->
+            val paketId = backStackEntry.arguments?.getString("paketId") ?: ""
+            DepartureDetailScreen(
+                navController = navController,
+                paketId = paketId
+            )
+        }
+
+        composable(
+            route = "laporan",
+            enterTransition = NavigationMotion.enterTransition,
+            exitTransition = NavigationMotion.exitTransition,
+            popEnterTransition = NavigationMotion.popEnterTransition,
+            popExitTransition = NavigationMotion.popExitTransition
+        ) {
+            val authViewModel: com.agunganamiroh.viewmodel.AuthViewModel = viewModel()
+            val authState by authViewModel.uiState.collectAsStateWithLifecycle()
+            LaporanScreen(
+                navController = navController,
+                agentEmail = authState.user?.email ?: "",
+                agentName = authState.user?.companyName ?: ""
+            )
+        }
+
+        composable(
+            route = "riwayat",
+            enterTransition = NavigationMotion.enterTransition,
+            exitTransition = NavigationMotion.exitTransition,
+            popEnterTransition = NavigationMotion.popEnterTransition,
+            popExitTransition = NavigationMotion.popExitTransition
+        ) {
+            RiwayatScreen(navController = navController)
+        }
+
+        composable(
+            route = "notification_center",
+            enterTransition = NavigationMotion.enterTransition,
+            exitTransition = NavigationMotion.exitTransition,
+            popEnterTransition = NavigationMotion.popEnterTransition,
+            popExitTransition = NavigationMotion.popExitTransition
+        ) {
+            NotificationCenterScreen(navController = navController)
         }
     }
 }

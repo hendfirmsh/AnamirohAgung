@@ -1,0 +1,45 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAdmin() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
+    }
+
+    match /activity/{docId} {
+      allow read: if request.auth != null && (resource.data.agentEmail == request.auth.token.email || isAdmin());
+      allow create: if request.auth != null && request.resource.data.agentEmail == request.auth.token.email;
+      allow update, delete: if request.auth != null && resource.data.agentEmail == request.auth.token.email;
+    }
+
+    match /jamaah/{docId} {
+      allow read: if request.auth != null && (resource.data.input_by == request.auth.token.email || isAdmin());
+      allow create: if request.auth != null && request.resource.data.input_by == request.auth.token.email;
+      allow update, delete: if request.auth != null && resource.data.input_by == request.auth.token.email;
+    }
+
+    match /pembayaran/{docId} {
+      allow read: if request.auth != null && (resource.data.agentEmail == request.auth.token.email || isAdmin());
+      allow create: if request.auth != null && request.resource.data.agentEmail == request.auth.token.email;
+      allow update, delete: if request.auth != null && resource.data.agentEmail == request.auth.token.email;
+    }
+
+    match /invoices/{docId} {
+      allow read: if request.auth != null && (resource.data.agentEmail == request.auth.token.email || isAdmin());
+      allow create: if request.auth != null && request.resource.data.agentEmail == request.auth.token.email;
+      allow update, delete: if request.auth != null && resource.data.agentEmail == request.auth.token.email;
+    }
+
+    match /users/{docId} {
+      allow read, write: if request.auth != null && request.auth.uid == docId;
+    }
+
+    match /paket_umroh/{docId} {
+      allow read: if request.auth != null;
+    }
+
+    match /kwitansi/{docId} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}

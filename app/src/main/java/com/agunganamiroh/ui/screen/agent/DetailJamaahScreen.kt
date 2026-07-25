@@ -38,6 +38,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.agunganamiroh.data.model.Jamaah
+import com.agunganamiroh.motion.*
 import com.agunganamiroh.viewmodel.JamaahViewModel
 import com.agunganamiroh.viewmodel.PaketViewModel
 import java.text.NumberFormat
@@ -56,6 +57,7 @@ fun DetailJamaahScreen(
     
     var showPaymentSheet by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var showSuccessDialog by remember { mutableStateOf(false) }
 
     val jamaah = uiState.selectedJamaah
     val paket = uiState.selectedPaket
@@ -66,9 +68,16 @@ fun DetailJamaahScreen(
 
     LaunchedEffect(uiState.updateSuccess) {
         if (uiState.updateSuccess) {
-            snackbarHostState.showSnackbar("Berhasil memperbarui data")
-            viewModel.resetUpdateStatus()
             showPaymentSheet = false
+            showSuccessDialog = true
+            viewModel.resetUpdateStatus()
+        }
+    }
+
+    LaunchedEffect(uiState.error) {
+        uiState.error?.let { errorMsg ->
+            snackbarHostState.showSnackbar(errorMsg)
+            viewModel.clearError()
         }
     }
 
@@ -96,7 +105,9 @@ fun DetailJamaahScreen(
             snackbarHost = { SnackbarHost(snackbarHostState) }
         ) { paddingValues ->
             if (uiState.loading && jamaah == null) {
-                LoadingState()
+                Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
+                    DetailSkeleton()
+                }
             } else if (uiState.error != null && jamaah == null) {
                 ErrorState(error = uiState.error!!, onRetry = { viewModel.loadJamaahDetail(jamaahId) })
             } else if (jamaah != null) {
@@ -147,6 +158,20 @@ fun DetailJamaahScreen(
             )
         }
 
+        if (showSuccessDialog) {
+            AlertDialog(
+                onDismissRequest = { showSuccessDialog = false },
+                title = { Text("Berhasil", color = MaterialTheme.colorScheme.onSurface) },
+                text = { Text("Pembayaran berhasil ditambahkan", color = MaterialTheme.colorScheme.onSurfaceVariant) },
+                confirmButton = {
+                    Button(onClick = { showSuccessDialog = false }) {
+                        Text("OK")
+                    }
+                },
+                containerColor = MaterialTheme.colorScheme.surface
+            )
+        }
+
         if (showDeleteDialog) {
             DeleteConfirmDialog(
                 onDismiss = { showDeleteDialog = false },
@@ -166,7 +191,9 @@ fun DetailJamaahScreen(
 @Composable
 private fun HeroProfileCard(jamaah: Jamaah) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .heroEnter(delay = 0),
         shape = RoundedCornerShape(28.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
@@ -230,7 +257,9 @@ private fun HeroProfileCard(jamaah: Jamaah) {
 
 @Composable
 private fun StatusSection(jamaah: Jamaah) {
-    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+    Row(modifier = Modifier
+        .fillMaxWidth()
+        .animateEntrance(80), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
         InfoMiniCard(
             label = "Status",
             value = jamaah.status.uppercase(),
@@ -273,7 +302,7 @@ private fun PaymentCard(jamaah: Jamaah, hargaPaket: Long, onAddPayment: () -> Un
     
     val format = NumberFormat.getCurrencyInstance(Locale("id", "ID"))
     
-    SectionCard(title = "RINGKASAN PEMBAYARAN", icon = Icons.Default.Payments) {
+    SectionCard(title = "RINGKASAN PEMBAYARAN", icon = Icons.Default.Payments, modifier = Modifier.animateEntrance(80)) {
         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Column {
@@ -313,7 +342,7 @@ private fun PaymentCard(jamaah: Jamaah, hargaPaket: Long, onAddPayment: () -> Un
             
             Button(
                 onClick = onAddPayment,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().bounceClick(),
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
             ) {
@@ -327,7 +356,7 @@ private fun PaymentCard(jamaah: Jamaah, hargaPaket: Long, onAddPayment: () -> Un
 
 @Composable
 private fun PersonalInfoCard(jamaah: Jamaah) {
-    SectionCard(title = "DATA PRIBADI", icon = Icons.Default.Person) {
+    SectionCard(title = "DATA PRIBADI", icon = Icons.Default.Person, modifier = Modifier.animateEntrance(80)) {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             DetailItem("Nama Lengkap", jamaah.nama)
             DetailItem("Bin / Binti", jamaah.binBinti.ifBlank { "-" })
@@ -342,7 +371,7 @@ private fun PersonalInfoCard(jamaah: Jamaah) {
 
 @Composable
 private fun ProgramCard(jamaah: Jamaah, paket: com.agunganamiroh.data.model.Paket?) {
-    SectionCard(title = "PROGRAM UMROH", icon = Icons.Default.FlightTakeoff) {
+    SectionCard(title = "PROGRAM UMROH", icon = Icons.Default.FlightTakeoff, modifier = Modifier.animateEntrance(80)) {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             DetailItem("Paket", jamaah.program)
             if (paket != null) {
@@ -363,7 +392,7 @@ private fun ProgramCard(jamaah: Jamaah, paket: com.agunganamiroh.data.model.Pake
 
 @Composable
 private fun DocumentCard(jamaah: Jamaah) {
-    SectionCard(title = "DOKUMEN OPERASIONAL", icon = Icons.Default.Description) {
+    SectionCard(title = "DOKUMEN OPERASIONAL", icon = Icons.Default.Description, modifier = Modifier.animateEntrance(80)) {
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             DocItem("KTP (Kartu Tanda Penduduk)", jamaah.ktp)
             DocItem("Kartu Keluarga (KK)", jamaah.kk)
@@ -390,7 +419,7 @@ private fun DocItem(label: String, isUploaded: Boolean) {
 
 @Composable
 private fun AdditionalRequestCard(request: String) {
-    SectionCard(title = "PERMINTAAN TAMBAHAN", icon = Icons.AutoMirrored.Filled.Notes) {
+    SectionCard(title = "PERMINTAAN TAMBAHAN", icon = Icons.AutoMirrored.Filled.Notes, modifier = Modifier.animateEntrance(80)) {
         Text(
             text = request.ifBlank { "Tidak ada permintaan tambahan." },
             style = MaterialTheme.typography.bodyMedium,
@@ -405,7 +434,7 @@ private fun ActionSection(onEdit: () -> Unit, onDelete: () -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Button(
             onClick = onEdit,
-            modifier = Modifier.fillMaxWidth().height(56.dp),
+            modifier = Modifier.fillMaxWidth().height(56.dp).bounceClick(),
             shape = RoundedCornerShape(16.dp),
             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
         ) {
@@ -416,7 +445,7 @@ private fun ActionSection(onEdit: () -> Unit, onDelete: () -> Unit) {
         
         OutlinedButton(
             onClick = onDelete,
-            modifier = Modifier.fillMaxWidth().height(56.dp),
+            modifier = Modifier.fillMaxWidth().height(56.dp).bounceClick(),
             shape = RoundedCornerShape(16.dp),
             colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error),
             border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.5f))
@@ -437,8 +466,8 @@ private fun DetailItem(label: String, value: String) {
 }
 
 @Composable
-private fun SectionCard(title: String, icon: ImageVector, content: @Composable () -> Unit) {
-    Column {
+private fun SectionCard(title: String, icon: ImageVector, modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+    Column(modifier = modifier) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(icon, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
             Spacer(modifier = Modifier.width(8.dp))
@@ -546,7 +575,7 @@ private fun PaymentBottomSheet(
                     val amt = amount.text.filter { it.isDigit() }.toLongOrNull() ?: 0L
                     if (amt > 0) onConfirm(amt, selectedMethod, notes) 
                 },
-                modifier = Modifier.fillMaxWidth().height(56.dp),
+                modifier = Modifier.fillMaxWidth().height(56.dp).bounceClick(),
                 shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                 enabled = amount.text.isNotEmpty() && !isLoading
@@ -597,8 +626,8 @@ private fun StatusBadge(status: String) {
 
 @Composable
 private fun LoadingState() {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+    Box(modifier = Modifier.fillMaxSize()) {
+        DetailSkeleton()
     }
 }
 

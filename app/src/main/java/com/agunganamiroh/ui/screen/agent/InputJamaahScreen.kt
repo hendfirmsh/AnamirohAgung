@@ -54,6 +54,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.agunganamiroh.data.model.Jamaah
+import com.agunganamiroh.motion.*
 import com.agunganamiroh.viewmodel.AuthViewModel
 import com.agunganamiroh.viewmodel.JamaahViewModel
 import com.agunganamiroh.viewmodel.PaketViewModel
@@ -80,6 +81,7 @@ fun InputJamaahScreen(
     
     val navBackStackEntry = navController.currentBackStackEntry
     val editId = navBackStackEntry?.arguments?.getString("id")
+    val preselectedPaketId = navBackStackEntry?.arguments?.getString("paketId")
     val isEdit = editId != null
 
     val agentEmail = authState.user?.email ?: "unknown_agent"
@@ -90,7 +92,16 @@ fun InputJamaahScreen(
     val listState = rememberLazyListState()
 
     var isVisible by remember { mutableStateOf(false) }
-    
+
+    LaunchedEffect(preselectedPaketId, paketState.pakets) {
+        if (preselectedPaketId != null && !isEdit && jamaahState.selectedPaket == null) {
+            val matched = paketState.pakets.find { it.id == preselectedPaketId }
+            if (matched != null) {
+                jamaahViewModel.onPaketSelected(matched)
+            }
+        }
+    }
+
     // Dialog States
     var showConfirmDialog by remember { mutableStateOf(false) }
     var showDraftDialog by remember { mutableStateOf(false) }
@@ -492,7 +503,10 @@ fun InputJamaahScreen(
 @Composable
 private fun RegistrationHeader() {
     Card(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp)
+            .animateEntrance(0),
         shape = RoundedCornerShape(28.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
@@ -971,7 +985,11 @@ private fun StickySaveButton(isLoading: Boolean, isSuccess: Boolean, isEdit: Boo
         Box(modifier = Modifier.padding(20.dp)) {
             Button(
                 onClick = onClick,
-                modifier = Modifier.fillMaxWidth().height(58.dp).scale(scale),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(58.dp)
+                    .scale(scale)
+                    .bounceClick(),
                 shape = RoundedCornerShape(24.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                 enabled = !isLoading && !isSuccess,

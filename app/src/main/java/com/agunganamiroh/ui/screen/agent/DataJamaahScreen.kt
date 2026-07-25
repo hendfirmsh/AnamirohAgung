@@ -8,12 +8,15 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,7 +37,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.agunganamiroh.data.model.Jamaah
+import com.agunganamiroh.motion.*
 import com.agunganamiroh.viewmodel.JamaahViewModel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.text.NumberFormat
 import java.util.*
 
@@ -45,6 +51,9 @@ fun DataJamaahScreen(
     viewModel: JamaahViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    var isRefreshing by remember { mutableStateOf(false) }
+    val refreshScope = rememberCoroutineScope()
+    val pullRefreshState = rememberPullToRefreshState()
     
     Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         IslamicPatternOverlay()
@@ -81,19 +90,33 @@ fun DataJamaahScreen(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 // Content Area
-                Box(modifier = Modifier.weight(1f)) {
-                    if (uiState.loading) {
-                        LoadingState()
-                    } else if (uiState.jamaahs.isEmpty()) {
-                        EmptyState()
-                    } else {
-                        JamaahList(
-                            jamaahs = uiState.jamaahs,
-                            onItemClick = { id ->
-                                navController.navigate("detail_jamaah/$id")
-                            },
-                            onDeleteClick = { viewModel.deleteJamaah(it) }
-                        )
+                PullToRefreshBox(
+                    isRefreshing = isRefreshing,
+                    onRefresh = {
+                        refreshScope.launch {
+                            isRefreshing = true
+                            viewModel.onSearchQueryChange(uiState.searchQuery)
+                            delay(400)
+                            isRefreshing = false
+                        }
+                    },
+                    state = pullRefreshState,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        if (uiState.loading) {
+                            LoadingState()
+                        } else if (uiState.jamaahs.isEmpty()) {
+                            EmptyState()
+                        } else {
+                            JamaahList(
+                                jamaahs = uiState.jamaahs,
+                                onItemClick = { id ->
+                                    navController.navigate("detail_jamaah/$id")
+                                },
+                                onDeleteClick = { viewModel.deleteJamaah(it) }
+                            )
+                        }
                     }
                 }
             }
@@ -170,8 +193,9 @@ private fun JamaahList(
         contentPadding = PaddingValues(20.dp, 8.dp, 20.dp, 32.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        items(jamaahs, key = { it.id }) { jamaah ->
+        itemsIndexed(jamaahs, key = { _, jamaah -> jamaah.id }) { index, jamaah ->
             JamaahCard(
+                index = index,
                 jamaah = jamaah,
                 onClick = { onItemClick(jamaah.id) },
                 onDelete = { onDeleteClick(jamaah.id) }
@@ -189,6 +213,8 @@ internal fun JamaahCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
+            .staggerItem(index, 60)
+            .bounceClick()
             .clickable { onClick() },
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -312,13 +338,7 @@ internal fun JamaahStatusBadge(status: String) {
 
 @Composable
 private fun LoadingState() {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-            Spacer(modifier = Modifier.height(16.dp))
-            Text("Memuat data jamaah...", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
-        }
-    }
+    ListCardSkeleton()
 }
 
 @Composable

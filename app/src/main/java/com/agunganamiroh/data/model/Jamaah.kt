@@ -1,5 +1,6 @@
 package com.agunganamiroh.data.model
 
+import com.google.firebase.Timestamp
 import com.google.firebase.firestore.DocumentId
 
 data class Jamaah(
@@ -26,5 +27,6 @@ data class Jamaah(
     val pelunasan: Boolean = false,
     val status: String = "pending",
     val requestTambahan: String = "",
-    val input_by: String = ""
+    val input_by: String = "",
+    val createdAt: Timestamp? = null
 )
