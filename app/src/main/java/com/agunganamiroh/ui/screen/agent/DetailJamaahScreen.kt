@@ -25,6 +25,11 @@ import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.OffsetMapping
+import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.input.TransformedText
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -134,6 +139,7 @@ fun DetailJamaahScreen(
             PaymentBottomSheet(
                 hargaPaket = if (jamaah.hargaPaket > 0) jamaah.hargaPaket else (paket?.harga ?: 0L),
                 totalPaid = jamaah.dp,
+                isLoading = uiState.loading,
                 onDismiss = { showPaymentSheet = false },
                 onConfirm = { amount, method, notes ->
                     viewModel.addPayment(amount, method, notes)
@@ -457,10 +463,11 @@ private fun SectionCard(title: String, icon: ImageVector, content: @Composable (
 private fun PaymentBottomSheet(
     hargaPaket: Long,
     totalPaid: Long,
+    isLoading: Boolean = false,
     onDismiss: () -> Unit,
     onConfirm: (Long, String, String) -> Unit
 ) {
-    var amount by remember { mutableStateOf("") }
+    var amount by remember { mutableStateOf(TextFieldValue()) }
     var notes by remember { mutableStateOf("") }
     var selectedMethod by remember { mutableStateOf("Transfer") }
     val methods = listOf("Cash", "Transfer", "QRIS")
@@ -487,10 +494,11 @@ private fun PaymentBottomSheet(
             
             OutlinedTextField(
                 value = amount,
-                onValueChange = { if (it.all { char -> char.isDigit() }) amount = it },
+                onValueChange = { amount = it },
                 label = { Text("Nominal Pembayaran (IDR)") },
                 modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                visualTransformation = RupiahVisualTransformation,
                 shape = RoundedCornerShape(12.dp),
                 prefix = { Text("Rp ") },
                 colors = OutlinedTextFieldDefaults.colors(
@@ -535,13 +543,13 @@ private fun PaymentBottomSheet(
             
             Button(
                 onClick = { 
-                    val amt = amount.toLongOrNull() ?: 0L
+                    val amt = amount.text.filter { it.isDigit() }.toLongOrNull() ?: 0L
                     if (amt > 0) onConfirm(amt, selectedMethod, notes) 
                 },
                 modifier = Modifier.fillMaxWidth().height(56.dp),
                 shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                enabled = amount.isNotEmpty()
+                enabled = amount.text.isNotEmpty() && !isLoading
             ) {
                 Text("KONFIRMASI PEMBAYARAN", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimary)
             }
@@ -639,4 +647,23 @@ private fun IslamicPatternOverlay() {
             }
         }
     }
+}
+
+private val RupiahVisualTransformation = VisualTransformation { text ->
+    val raw = text.text.filter { it.isDigit() }
+    if (raw.isEmpty()) return@VisualTransformation TransformedText(AnnotatedString(""), OffsetMapping.Identity)
+    val formatted = raw.reversed().chunked(3).joinToString(".").reversed()
+    val n = raw.length
+    TransformedText(AnnotatedString(formatted), object : OffsetMapping {
+        override fun originalToTransformed(offset: Int): Int {
+            if (offset >= n) return formatted.length
+            var dots = 0; var k = 1
+            while (n - 3 * k > 0) { if (n - 3 * k < offset) dots++; k++ }
+            return offset + dots
+        }
+        override fun transformedToOriginal(offset: Int): Int {
+            if (offset >= formatted.length) return n
+            return offset - formatted.take(offset).count { it == '.' }
+        }
+    })
 }

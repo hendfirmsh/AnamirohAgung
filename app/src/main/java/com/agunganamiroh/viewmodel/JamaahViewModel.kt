@@ -52,18 +52,6 @@ class JamaahViewModel : ViewModel() {
     private var paymentsJob: Job? = null
 
     init {
-        observeJamaah()
-    }
-
-    private fun observeJamaah() {
-        val user = auth.currentUser
-        Log.d("JamaahViewModel", "Auth Check: UID=${user?.uid}, Email=${user?.email}, Name=${user?.displayName}")
-        
-        user?.email?.let { email ->
-            loadJamaahByAgent(email)
-        } ?: run {
-            Log.e("JamaahViewModel", "Current user email is null")
-        }
     }
 
     fun loadJamaahByAgent(agentEmail: String) {
@@ -71,7 +59,7 @@ class JamaahViewModel : ViewModel() {
         jamaahJob?.cancel()
         globalPaymentsJob?.cancel()
         _uiState.update { it.copy(loading = true) }
-        
+
         jamaahJob = repository.getJamaahRealtime(agentEmail)
             .onEach { result ->
                 result.fold(
