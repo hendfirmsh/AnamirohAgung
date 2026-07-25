@@ -4,8 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.agunganamiroh.data.model.Activity
 import com.agunganamiroh.data.repository.ActivityRepository
-import com.google.firebase.auth.FirebaseAuth
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 data class ActivityUiState(
@@ -15,30 +16,46 @@ data class ActivityUiState(
 )
 
 class ActivityViewModel : ViewModel() {
+
     private val repository = ActivityRepository()
-    private val auth = FirebaseAuth.getInstance()
 
     private val _uiState = MutableStateFlow(ActivityUiState())
     val uiState: StateFlow<ActivityUiState> = _uiState.asStateFlow()
 
     init {
-        observeActivities()
+        loadActivities()
     }
 
-    fun observeActivities() {
-        val email = auth.currentUser?.email ?: return
-        _uiState.update { it.copy(loading = true) }
+    fun loadActivities() {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(loading = true)
 
-        repository.getRecentActivities(email)
-            .onEach { result ->
+            try {
+                val result = repository.getActivities()
                 result.fold(
-                    onSuccess = { list ->
-                        _uiState.update { it.copy(activities = list, loading = false) }
+                    onSuccess = { activities ->
+                        _uiState.value = ActivityUiState(
+                            loading = false,
+                            activities = activities
+                        )
                     },
-                    onFailure = { e ->
-                        _uiState.update { it.copy(error = e.message, loading = false) }
+                    onFailure = { exception ->
+                        _uiState.value = ActivityUiState(
+                            loading = false,
+                            error = exception.message ?: "Gagal memuat aktivitas"
+                        )
                     }
                 )
-            }.launchIn(viewModelScope)
+            } catch (e: Exception) {
+                _uiState.value = ActivityUiState(
+                    loading = false,
+                    error = e.message ?: "Gagal memuat aktivitas"
+                )
+            }
+        }
+    }
+
+    fun clearError() {
+        _uiState.value = _uiState.value.copy(error = null)
     }
 }

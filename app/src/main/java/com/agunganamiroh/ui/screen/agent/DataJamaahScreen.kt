@@ -125,7 +125,7 @@ fun DataJamaahScreen(
 }
 
 @Composable
-private fun SearchAndFilterSection(
+internal fun SearchAndFilterSection(
     query: String,
     onQueryChange: (String) -> Unit,
     selectedFilter: String,
@@ -205,8 +205,7 @@ private fun JamaahList(
 }
 
 @Composable
-private fun JamaahCard(
-    index: Int,
+internal fun JamaahCard(
     jamaah: Jamaah,
     onClick: () -> Unit,
     onDelete: () -> Unit
@@ -260,7 +259,7 @@ private fun JamaahCard(
                 }
 
                 // Status Badge
-                StatusBadge(status = jamaah.status)
+                JamaahStatusBadge(status = jamaah.status)
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -315,7 +314,7 @@ private fun JamaahCard(
 }
 
 @Composable
-private fun StatusBadge(status: String) {
+internal fun JamaahStatusBadge(status: String) {
     val color = when (status.lowercase()) {
         "pending" -> MaterialTheme.colorScheme.secondary
         "approved", "verified" -> MaterialTheme.colorScheme.tertiary

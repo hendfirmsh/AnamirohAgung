@@ -39,8 +39,7 @@ private const val BAR_ANIM_DURATION = 250
 
 @Composable
 fun AgentMainScaffold(
-    navController: NavController,
-    nestedScrollConnection: NestedScrollConnection? = null
+    navController: NavController
 ) {
     val tabs = listOf(
         TabItem(
@@ -68,7 +67,7 @@ fun AgentMainScaffold(
 
     val currentShowBottomBar by rememberUpdatedState(showBottomBar)
 
-    val nestedScrollConnectionInternal = remember {
+    val nestedScrollConnection = remember {
         object : NestedScrollConnection {
             override fun onPreScroll(
                 available: Offset,
@@ -123,17 +122,6 @@ fun AgentMainScaffold(
                             selected = selectedTabIndex == index,
                             onClick = {
                                 selectedTabIndex = index
-                                when (tab.route) {
-                                    Screen.AgentDashboard.route -> navController.navigate(Screen.AgentDashboard.route) {
-                                        launchSingleTop = true
-                                    }
-                                    Screen.AgentHistory.route -> navController.navigate(Screen.AgentHistory.route) {
-                                        launchSingleTop = true
-                                    }
-                                    Screen.AgentProfile.route -> navController.navigate(Screen.AgentProfile.route) {
-                                        launchSingleTop = true
-                                    }
-                                }
                             },
                             alwaysShowLabel = true,
                             colors = NavigationBarItemDefaults.colors(
@@ -151,22 +139,10 @@ fun AgentMainScaffold(
         containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         when (selectedTabIndex) {
-            0 -> AgentDashboardScreen(
-                navController = navController,
-                nestedScrollConnection = nestedScrollConnectionInternal
-            )
-            1 -> AgentHistoryScreen(
-                navController = navController,
-                nestedScrollConnection = nestedScrollConnectionInternal
-            )
-            2 -> AgentProfileScreen(
-                navController = navController,
-                nestedScrollConnection = nestedScrollConnectionInternal
-            )
-            else -> AgentDashboardScreen(
-                navController = navController,
-                nestedScrollConnection = nestedScrollConnectionInternal
-            )
+            0 -> AgentDashboardScreen(navController = navController, nestedScrollConnection = nestedScrollConnection)
+            1 -> AgentHistoryScreen(navController = navController, nestedScrollConnection = nestedScrollConnection)
+            2 -> AgentProfileScreen(navController = navController, nestedScrollConnection = nestedScrollConnection)
+            else -> AgentDashboardScreen(navController = navController, nestedScrollConnection = nestedScrollConnection)
         }
     }
 }

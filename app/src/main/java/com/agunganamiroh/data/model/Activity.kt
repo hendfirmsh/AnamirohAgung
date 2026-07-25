@@ -1,23 +1,20 @@
 package com.agunganamiroh.data.model
 
 import com.google.firebase.Timestamp
-import com.google.firebase.firestore.DocumentId
 
 data class Activity(
-    @DocumentId
     val id: String = "",
-    val activityId: String = "",
-    val type: String = "",
+    val type: ActivityType = ActivityType.REGISTRATION,
     val title: String = "",
-    val description: String = "",
-    val jamaahId: String = "",
-    val jamaahName: String = "",
-    val paymentId: String = "",
-    val invoiceId: String = "",
-    val agentUid: String = "",
-    val agentEmail: String = "",
-    val amount: Long = 0,
-    val status: String = "",
-    val createdAt: Timestamp? = null,
-    val metadata: Map<String, Any> = emptyMap()
+    val subtitle: String = "",
+    val status: String = "pending",
+    val timestamp: Timestamp = Timestamp.now()
 )
+
+enum class ActivityType(val displayName: String) {
+    REGISTRATION("Registrasi Jamaah"),
+    PAYMENT("Pembayaran"),
+    STATUS_UPDATE("Update Status"),
+    PROFILE_UPDATE("Update Profil"),
+    OTHER("Lainnya")
+}
