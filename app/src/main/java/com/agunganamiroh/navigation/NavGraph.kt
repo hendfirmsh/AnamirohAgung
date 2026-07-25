@@ -30,6 +30,8 @@ import com.agunganamiroh.ui.screen.invoice.AdminCreateInvoiceScreen
 import com.agunganamiroh.ui.screen.keberangkatan.KeberangkatanScreen
 import com.agunganamiroh.ui.screen.keberangkatan.detail.DepartureDetailScreen
 import com.agunganamiroh.ui.screen.laporan.LaporanScreen
+import com.agunganamiroh.ui.screen.paket.PackageCatalogScreen
+import com.agunganamiroh.ui.screen.paket.PackageDetailScreen
 import androidx.navigation.navArgument
 import androidx.navigation.NavType
 
@@ -121,12 +123,19 @@ fun NavGraph() {
         }
 
         composable(
-            route = "input_jamaah?id={id}",
-            arguments = listOf(navArgument("id") { 
-                type = NavType.StringType
-                nullable = true
-                defaultValue = null
-            }),
+            route = "input_jamaah?id={id}&paketId={paketId}",
+            arguments = listOf(
+                navArgument("id") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                },
+                navArgument("paketId") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                }
+            ),
             enterTransition = NavigationMotion.enterTransition,
             exitTransition = NavigationMotion.exitTransition,
             popEnterTransition = NavigationMotion.popEnterTransition,
@@ -228,6 +237,27 @@ fun NavGraph() {
         ) { backStackEntry ->
             val id = backStackEntry.arguments?.getString("id") ?: ""
             AdminCreateInvoiceScreen(navController = navController, jamaahId = id)
+        }
+
+        composable(
+            route = "package_catalog",
+            enterTransition = NavigationMotion.enterTransition,
+            exitTransition = NavigationMotion.exitTransition,
+            popEnterTransition = NavigationMotion.popEnterTransition,
+            popExitTransition = NavigationMotion.popExitTransition
+        ) {
+            PackageCatalogScreen(navController = navController)
+        }
+
+        composable(
+            route = "package_detail/{paketId}",
+            arguments = listOf(navArgument("paketId") { type = NavType.StringType }),
+            enterTransition = NavigationMotion.enterTransition,
+            exitTransition = NavigationMotion.exitTransition,
+            popEnterTransition = NavigationMotion.popEnterTransition,
+            popExitTransition = NavigationMotion.popExitTransition
+        ) {
+            PackageDetailScreen(navController = navController)
         }
 
         composable(

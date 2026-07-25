@@ -106,9 +106,6 @@ fun AgentDashboardScreen(
     val activityState by activityViewModel.uiState.collectAsStateWithLifecycle()
     val notificationState by notificationViewModel.state.collectAsStateWithLifecycle()
 
-    var selectedPaketForDetail by remember { mutableStateOf<com.agunganamiroh.data.model.Paket?>(null) }
-    var showPaketSheet by remember { mutableStateOf(false) }
-
     val agentName = authState.user?.companyName ?: "Agent Anamiroh"
     
     val primaryColor = MaterialTheme.colorScheme.primary
@@ -260,9 +257,9 @@ fun AgentDashboardScreen(
                                 paketList = paketState.pakets,
                                 isLoading = paketState.loading,
                                 onDetailClick = { paket ->
-                                    selectedPaketForDetail = paket
-                                    showPaketSheet = true
-                                }
+                                    navController.navigate("package_detail/${paket.id}")
+                                },
+                                onSeeAllClick = { navController.navigate("package_catalog") }
                             )
                         }
 
@@ -284,12 +281,6 @@ fun AgentDashboardScreen(
             }
         }
 
-        if (showPaketSheet && selectedPaketForDetail != null) {
-            PaketDetailBottomSheet(
-                paket = selectedPaketForDetail!!,
-                onDismiss = { showPaketSheet = false }
-            )
-        }
     }
 }
 
@@ -516,12 +507,13 @@ private fun StatCard(stat: StatItem, modifier: Modifier = Modifier, isLoading: B
 private fun UpcomingPackageSection(
     paketList: List<com.agunganamiroh.data.model.Paket>,
     isLoading: Boolean,
-    onDetailClick: (com.agunganamiroh.data.model.Paket) -> Unit
+    onDetailClick: (com.agunganamiroh.data.model.Paket) -> Unit,
+    onSeeAllClick: () -> Unit = {}
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             Text(text = "Paket Umroh & Haji", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
-            Text(text = "Lihat Semua", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, modifier = Modifier.clickable { })
+            Text(text = "Lihat Semua", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, modifier = Modifier.clickable { onSeeAllClick() })
         }
         if (isLoading) {
             LazyRow(contentPadding = PaddingValues(horizontal = 20.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -715,60 +707,4 @@ private fun IslamicPatternOverlay() {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun PaketDetailBottomSheet(paket: com.agunganamiroh.data.model.Paket, onDismiss: () -> Unit) {
-    ModalBottomSheet(onDismissRequest = onDismiss, containerColor = MaterialTheme.colorScheme.surface, dragHandle = { BottomSheetDefaults.DragHandle(color = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)) }) {
-        Column(modifier = Modifier.fillMaxWidth().padding(24.dp).padding(bottom = 32.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
-            Text(text = "Detail Paket", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-            Box(modifier = Modifier.fillMaxWidth().height(180.dp).clip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)), contentAlignment = Alignment.Center) {
-                Icon(Icons.Default.Image, null, tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f), modifier = Modifier.size(48.dp))
-                if (paket.brosurName.isNotBlank()) {
-                    Text("Brochure: ${paket.brosurName}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary, modifier = Modifier.align(Alignment.BottomCenter).padding(8.dp))
-                }
-            }
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(paket.title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.onSurface)
-                Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                    DetailBadge(icon = Icons.Default.Timer, text = paket.durasi)
-                    DetailBadge(icon = Icons.Default.Flight, text = paket.maskapai)
-                }
-                HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
-                DetailRow(label = "Tanggal Keberangkatan", value = paket.tanggal, icon = Icons.Default.CalendarToday)
-                DetailRow(label = "Hotel Makkah", value = paket.hotelMakkah, icon = Icons.Default.Hotel)
-                DetailRow(label = "Hotel Madinah", value = paket.hotelMadinah, icon = Icons.Default.Hotel)
-                DetailRow(label = "Sisa Kursi", value = "${paket.sisaSeat} Kursi", icon = Icons.Default.Group)
-                val format = NumberFormat.getCurrencyInstance(Locale("id", "ID"))
-                DetailRow(label = "Harga Paket", value = format.format(paket.harga).replace(",00", ""), icon = Icons.Default.Payments, valueColor = MaterialTheme.colorScheme.primary, isLarge = true)
-            }
-            Button(onClick = onDismiss, modifier = Modifier.fillMaxWidth().height(56.dp), shape = RoundedCornerShape(16.dp), colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)) {
-                Text("TUTUP", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimary)
-            }
-        }
-    }
-}
 
-@Composable
-private fun DetailBadge(icon: ImageVector, text: String) {
-    Surface(shape = RoundedCornerShape(12.dp), color = MaterialTheme.colorScheme.primary.copy(alpha = 0.05f), border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))) {
-        Row(modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-            Icon(icon, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(14.dp))
-            Spacer(modifier = Modifier.width(6.dp))
-            Text(text, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Medium)
-        }
-    }
-}
-
-@Composable
-private fun DetailRow(label: String, value: String, icon: ImageVector, valueColor: Color? = null, isLarge: Boolean = false) {
-    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        Box(modifier = Modifier.size(32.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primary.copy(alpha = 0.05f)), contentAlignment = Alignment.Center) {
-            Icon(icon, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
-        }
-        Spacer(modifier = Modifier.width(16.dp))
-        Column {
-            Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f))
-            Text(text = value, style = if (isLarge) MaterialTheme.typography.titleLarge else MaterialTheme.typography.bodyLarge, fontWeight = if (isLarge) FontWeight.ExtraBold else FontWeight.Bold, color = valueColor ?: MaterialTheme.colorScheme.onSurface)
-        }
-    }
-}
