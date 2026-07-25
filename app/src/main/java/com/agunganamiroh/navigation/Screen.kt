@@ -42,4 +42,12 @@ sealed class Screen(
     object NotificationCenter :
         Screen("notification_center")
 
+    object Keberangkatan :
+        Screen("keberangkatan")
+
+    object DepartureDetail :
+        Screen("departure_detail/{paketId}") {
+        fun createRoute(paketId: String) = "departure_detail/$paketId"
+    }
+
 }

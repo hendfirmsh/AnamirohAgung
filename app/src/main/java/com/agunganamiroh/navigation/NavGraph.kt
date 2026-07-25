@@ -24,6 +24,8 @@ import com.agunganamiroh.ui.screen.invoice.AgentInvoiceListScreen
 import com.agunganamiroh.ui.screen.invoice.AgentInvoiceDetailScreen
 import com.agunganamiroh.ui.screen.invoice.AdminInvoiceListScreen
 import com.agunganamiroh.ui.screen.invoice.AdminCreateInvoiceScreen
+import com.agunganamiroh.ui.screen.keberangkatan.KeberangkatanScreen
+import com.agunganamiroh.ui.screen.keberangkatan.detail.DepartureDetailScreen
 import androidx.navigation.navArgument
 import androidx.navigation.NavType
 
@@ -222,6 +224,31 @@ fun NavGraph() {
         ) { backStackEntry ->
             val id = backStackEntry.arguments?.getString("id") ?: ""
             AdminCreateInvoiceScreen(navController = navController, jamaahId = id)
+        }
+
+        composable(
+            route = "keberangkatan",
+            enterTransition = NavigationMotion.enterTransition,
+            exitTransition = NavigationMotion.exitTransition,
+            popEnterTransition = NavigationMotion.popEnterTransition,
+            popExitTransition = NavigationMotion.popExitTransition
+        ) {
+            KeberangkatanScreen(navController = navController)
+        }
+
+        composable(
+            route = "departure_detail/{paketId}",
+            arguments = listOf(navArgument("paketId") { type = NavType.StringType }),
+            enterTransition = NavigationMotion.enterTransition,
+            exitTransition = NavigationMotion.exitTransition,
+            popEnterTransition = NavigationMotion.popEnterTransition,
+            popExitTransition = NavigationMotion.popExitTransition
+        ) { backStackEntry ->
+            val paketId = backStackEntry.arguments?.getString("paketId") ?: ""
+            DepartureDetailScreen(
+                navController = navController,
+                paketId = paketId
+            )
         }
 
         composable(
