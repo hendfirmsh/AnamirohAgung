@@ -42,6 +42,7 @@ sealed class Screen(
     object NotificationCenter :
         Screen("notification_center")
 
+<<<<<<< HEAD
     object PackageCatalog :
         Screen("package_catalog")
 
@@ -49,6 +50,10 @@ sealed class Screen(
         Screen("package_detail/{paketId}") {
         fun createRoute(paketId: String) = "package_detail/$paketId"
     }
+=======
+    object Riwayat :
+        Screen("riwayat")
+>>>>>>> 7faf190 (feat: Agent Activity History (Riwayat) with vertical timeline, search, filter & period grouping)
 
     object Keberangkatan :
         Screen("keberangkatan")

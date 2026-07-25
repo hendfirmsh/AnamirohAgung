@@ -269,7 +269,8 @@ fun AgentDashboardScreen(
                         item {
                             ActivitySection(
                                 activities = activityState.activities,
-                                isLoading = activityState.loading
+                                isLoading = activityState.loading,
+                                onSeeAllClick = { navController.navigate("riwayat") }
                             )
                         }
 
@@ -570,11 +571,11 @@ private fun ShimmerPackageCard() {
 }
 
 @Composable
-private fun ActivitySection(activities: List<com.agunganamiroh.data.model.Activity>, isLoading: Boolean) {
+private fun ActivitySection(activities: List<com.agunganamiroh.data.model.Activity>, isLoading: Boolean, onSeeAllClick: () -> Unit = {}) {
     Column(modifier = Modifier.padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             Text(text = "Aktivitas Terbaru", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
-            Text(text = "See All", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, modifier = Modifier.clickable { })
+            Text(text = "See All", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, modifier = Modifier.clickable { onSeeAllClick() })
         }
         Card(shape = RoundedCornerShape(24.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)) {
             Column(modifier = Modifier.padding(16.dp)) {
