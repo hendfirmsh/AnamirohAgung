@@ -166,6 +166,7 @@ fun AgentDashboardScreen(
             MenuItem("Data Jamaah", "Kelola database jamaah", Icons.Default.AssignmentInd, "data_jamaah", 3),
             MenuItem("Pembayaran", "Verifikasi & riwayat bayar", Icons.Default.Payments, "pembayaran"),
             MenuItem("Invoice", "Cetak & kirim tagihan", Icons.Default.Receipt, "agent_invoice_list"),
+            MenuItem("Laporan", "Analisis penjualan & kinerja", Icons.Default.BarChart, "laporan"),
             MenuItem("Keberangkatan", "Pantau kesiapan jamaah", Icons.Default.FlightTakeoff, "keberangkatan"),
             MenuItem("Riwayat", "Laporan aktivitas agent", Icons.Default.History, "riwayat"),
             MenuItem("Profil", "Pengaturan akun agent", Icons.Default.Person, "account_center")

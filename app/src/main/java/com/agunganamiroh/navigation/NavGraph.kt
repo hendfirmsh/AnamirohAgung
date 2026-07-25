@@ -5,7 +5,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.*
@@ -26,6 +29,7 @@ import com.agunganamiroh.ui.screen.invoice.AdminInvoiceListScreen
 import com.agunganamiroh.ui.screen.invoice.AdminCreateInvoiceScreen
 import com.agunganamiroh.ui.screen.keberangkatan.KeberangkatanScreen
 import com.agunganamiroh.ui.screen.keberangkatan.detail.DepartureDetailScreen
+import com.agunganamiroh.ui.screen.laporan.LaporanScreen
 import androidx.navigation.navArgument
 import androidx.navigation.NavType
 
@@ -248,6 +252,22 @@ fun NavGraph() {
             DepartureDetailScreen(
                 navController = navController,
                 paketId = paketId
+            )
+        }
+
+        composable(
+            route = "laporan",
+            enterTransition = NavigationMotion.enterTransition,
+            exitTransition = NavigationMotion.exitTransition,
+            popEnterTransition = NavigationMotion.popEnterTransition,
+            popExitTransition = NavigationMotion.popExitTransition
+        ) {
+            val authViewModel: com.agunganamiroh.viewmodel.AuthViewModel = viewModel()
+            val authState by authViewModel.uiState.collectAsStateWithLifecycle()
+            LaporanScreen(
+                navController = navController,
+                agentEmail = authState.user?.email ?: "",
+                agentName = authState.user?.companyName ?: ""
             )
         }
 

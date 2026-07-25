@@ -50,4 +50,7 @@ sealed class Screen(
         fun createRoute(paketId: String) = "departure_detail/$paketId"
     }
 
+    object Laporan :
+        Screen("laporan")
+
 }

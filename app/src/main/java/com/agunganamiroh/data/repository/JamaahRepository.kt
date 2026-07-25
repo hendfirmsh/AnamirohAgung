@@ -1,9 +1,11 @@
 package com.agunganamiroh.data.repository
 
 import com.agunganamiroh.data.model.Jamaah
+import com.agunganamiroh.data.model.Pembayaran
 import com.agunganamiroh.data.remote.FirebaseModule
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.Query
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -45,6 +47,7 @@ class JamaahRepository {
                 val docRef = collection.document()
                 val jamaahWithId = jamaah.copy(id = docRef.id)
                 transaction.set(docRef, jamaahWithId)
+                transaction.update(docRef, "createdAt", FieldValue.serverTimestamp())
 
                 val agentEmail = jamaah.input_by.ifBlank { auth.currentUser?.email ?: "unknown" }
                 val agentUid = auth.currentUser?.uid ?: ""
@@ -216,7 +219,24 @@ class JamaahRepository {
         awaitClose { subscription.remove() }
     }
 
-    fun getGlobalPaymentsByAgent(agentEmail: String): Flow<Result<List<com.agunganamiroh.data.model.Pembayaran>>> = callbackFlow {
+    fun getAllPaymentsByAgent(agentEmail: String): Flow<Result<List<Pembayaran>>> = callbackFlow {
+        val subscription = firestore.collection("pembayaran")
+            .whereEqualTo("agentEmail", agentEmail)
+            .orderBy("createdAt", Query.Direction.DESCENDING)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    trySend(Result.failure(error))
+                    return@addSnapshotListener
+                }
+                if (snapshot != null) {
+                    val payments = snapshot.toObjects(Pembayaran::class.java)
+                    trySend(Result.success(payments))
+                }
+            }
+        awaitClose { subscription.remove() }
+    }
+
+    fun getGlobalPaymentsByAgent(agentEmail: String): Flow<Result<List<Pembayaran>>> = callbackFlow {
         val subscription = firestore.collection("pembayaran")
             .whereEqualTo("agentEmail", agentEmail)
             .orderBy("createdAt", Query.Direction.DESCENDING)
