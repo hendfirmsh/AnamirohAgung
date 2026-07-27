@@ -17,8 +17,16 @@ import com.agunganamiroh.ui.screen.notification.NotificationCenterScreen
 import com.agunganamiroh.ui.screen.agent.InputJamaahScreen
 import com.agunganamiroh.ui.screen.agent.DataJamaahScreen
 import com.agunganamiroh.ui.screen.agent.DetailJamaahScreen
-import com.agunganamiroh.ui.screen.agent.AgentMainScaffold
-import com.agunganamiroh.ui.screen.agent.AgentHistoryScreen
+import com.agunganamiroh.ui.screen.payment.PaymentScreen
+import com.agunganamiroh.ui.screen.payment.PaymentDetailScreen
+import com.agunganamiroh.ui.screen.invoice.AgentInvoiceListScreen
+import com.agunganamiroh.ui.screen.invoice.AgentInvoiceDetailScreen
+import com.agunganamiroh.ui.screen.invoice.AdminInvoiceListScreen
+import com.agunganamiroh.ui.screen.invoice.AdminCreateInvoiceScreen
+import com.agunganamiroh.ui.screen.keberangkatan.KeberangkatanScreen
+import com.agunganamiroh.ui.screen.keberangkatan.detail.DepartureDetailScreen
+import com.agunganamiroh.ui.screen.laporan.LaporanScreen
+import com.agunganamiroh.ui.screen.riwayat.RiwayatScreen
 import androidx.navigation.navArgument
 import androidx.navigation.NavType
 

@@ -54,14 +54,6 @@ sealed class Screen(
     object Riwayat :
         Screen("riwayat")
 
-    object PackageCatalog :
-        Screen("package_catalog")
-
-    object PackageDetail :
-        Screen("package_detail/{paketId}") {
-        fun createRoute(paketId: String) = "package_detail/$paketId"
-    }
-
     object Keberangkatan :
         Screen("keberangkatan")
 

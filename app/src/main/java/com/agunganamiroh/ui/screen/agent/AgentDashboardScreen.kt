@@ -241,9 +241,13 @@ fun AgentDashboardScreen(
                         )
                     }
 
-                    item {
-                        StatisticsSection(stats = stats, isLoading = jamaahState.loading)
-                    }
+                        item {
+                            ActivitySection(
+                                activities = activityState.activities,
+                                isLoading = activityState.loading,
+                                onSeeAllClick = { navController.navigate("riwayat") }
+                            )
+                        }
 
                     item {
                         ActivitySection(
