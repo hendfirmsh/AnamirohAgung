@@ -1,21 +1,17 @@
 package com.agunganamiroh.navigation
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.ui.Modifier
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavBackStackEntry
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.*
-import com.agunganamiroh.motion.NavigationMotion
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.agunganamiroh.ui.screen.auth.LoginScreen
 import com.agunganamiroh.ui.screen.admin.AdminDashboardScreen
 import com.agunganamiroh.ui.screen.agent.AgentDashboardScreen
+import com.agunganamiroh.ui.screen.agent.AgentHistoryScreen
+import com.agunganamiroh.ui.screen.agent.AgentMainScaffold
+import com.agunganamiroh.ui.screen.agent.AgentProfileScreen
 import com.agunganamiroh.ui.screen.account.AccountCenterScreen
 import com.agunganamiroh.ui.screen.notification.NotificationCenterScreen
 import com.agunganamiroh.ui.screen.agent.InputJamaahScreen
@@ -34,16 +30,35 @@ import com.agunganamiroh.ui.screen.riwayat.RiwayatScreen
 import androidx.navigation.navArgument
 import androidx.navigation.NavType
 
+private const val DURATION = 300
+
 @Composable
 fun NavGraph() {
 
     val navController =
         rememberNavController()
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+    NavHost(
+        navController = navController,
+        startDestination = "login",
+        enterTransition = {
+            fadeIn(tween(DURATION)) + slideInHorizontally(
+                tween(DURATION),
+                initialOffsetX = { it / 5 }
+            )
+        },
+        exitTransition = {
+            fadeOut(tween(DURATION))
+        },
+        popEnterTransition = {
+            fadeIn(tween(DURATION))
+        },
+        popExitTransition = {
+            fadeOut(tween(DURATION)) + slideOutHorizontally(
+                tween(DURATION),
+                targetOffsetX = { it / 5 }
+            )
+        }
     ) {
         NavHost(
             navController = navController,
@@ -75,7 +90,7 @@ fun NavGraph() {
 
                         "agent" -> {
                             navController.navigate(
-                                "agent_dashboard"
+                                Screen.AgentMain.route
                             ) {
                                 popUpTo("login") {
                                     inclusive = true
@@ -97,55 +112,36 @@ fun NavGraph() {
             AdminDashboardScreen(navController = navController)
         }
 
-        composable(
-            route = "agent_dashboard",
-            enterTransition = NavigationMotion.enterTransition,
-            exitTransition = NavigationMotion.exitTransition,
-            popEnterTransition = NavigationMotion.popEnterTransition,
-            popExitTransition = NavigationMotion.popExitTransition
-        ) {
-            AgentDashboardScreen(
+        composable(route = Screen.AgentMain.route) {
+            AgentMainScaffold(navController = navController)
+        }
+
+        composable(route = "data_jamaah") {
+            DataJamaahScreen(
                 navController = navController
             )
         }
 
         composable(
-            route = "account_center",
-            enterTransition = NavigationMotion.enterTransition,
-            exitTransition = NavigationMotion.exitTransition,
-            popEnterTransition = NavigationMotion.popEnterTransition,
-            popExitTransition = NavigationMotion.popExitTransition
-        ) {
-            AccountCenterScreen(
-                navController = navController
-            )
-        }
-
-        composable(
-            route = "input_jamaah?id={id}",
-            arguments = listOf(navArgument("id") { 
-                type = NavType.StringType
-                nullable = true
-                defaultValue = null
-            }),
+            route = "input_jamaah?id={id}&paketId={paketId}",
+            arguments = listOf(
+                navArgument("id") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                },
+                navArgument("paketId") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                }
+            ),
             enterTransition = NavigationMotion.enterTransition,
             exitTransition = NavigationMotion.exitTransition,
             popEnterTransition = NavigationMotion.popEnterTransition,
             popExitTransition = NavigationMotion.popExitTransition
         ) {
             InputJamaahScreen(
-                navController = navController
-            )
-        }
-
-        composable(
-            route = "data_jamaah",
-            enterTransition = NavigationMotion.enterTransition,
-            exitTransition = NavigationMotion.exitTransition,
-            popEnterTransition = NavigationMotion.popEnterTransition,
-            popExitTransition = NavigationMotion.popExitTransition
-        ) {
-            DataJamaahScreen(
                 navController = navController
             )
         }
@@ -232,6 +228,27 @@ fun NavGraph() {
         }
 
         composable(
+            route = "package_catalog",
+            enterTransition = NavigationMotion.enterTransition,
+            exitTransition = NavigationMotion.exitTransition,
+            popEnterTransition = NavigationMotion.popEnterTransition,
+            popExitTransition = NavigationMotion.popExitTransition
+        ) {
+            PackageCatalogScreen(navController = navController)
+        }
+
+        composable(
+            route = "package_detail/{paketId}",
+            arguments = listOf(navArgument("paketId") { type = NavType.StringType }),
+            enterTransition = NavigationMotion.enterTransition,
+            exitTransition = NavigationMotion.exitTransition,
+            popEnterTransition = NavigationMotion.popEnterTransition,
+            popExitTransition = NavigationMotion.popExitTransition
+        ) {
+            PackageDetailScreen(navController = navController)
+        }
+
+        composable(
             route = "keberangkatan",
             enterTransition = NavigationMotion.enterTransition,
             exitTransition = NavigationMotion.exitTransition,
@@ -292,5 +309,4 @@ fun NavGraph() {
             NotificationCenterScreen(navController = navController)
         }
     }
-    } // Box
-} // NavGraph
+}

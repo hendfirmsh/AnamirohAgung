@@ -22,7 +22,9 @@ class PaketRepository {
                 }
 
                 if (snapshot != null) {
-                    val pakets = snapshot.toObjects(Paket::class.java)
+                    val pakets = snapshot.documents.mapNotNull { doc ->
+                        doc.toObject(Paket::class.java)?.copy(id = doc.id)
+                    }
                     trySend(Result.success(pakets))
                 }
             }
@@ -33,7 +35,9 @@ class PaketRepository {
     suspend fun getAllPaket(): Result<List<Paket>> {
         return try {
             val snapshot = collection.get().await()
-            val pakets = snapshot.toObjects(Paket::class.java)
+            val pakets = snapshot.documents.mapNotNull { doc ->
+                doc.toObject(Paket::class.java)?.copy(id = doc.id)
+            }
             Result.success(pakets)
         } catch (e: Exception) {
             Result.failure(e)

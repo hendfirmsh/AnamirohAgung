@@ -41,18 +41,6 @@ class JamaahViewModel : ViewModel() {
     private var paymentsJob: Job? = null
 
     init {
-        observeJamaah()
-    }
-
-    private fun observeJamaah() {
-        val user = auth.currentUser
-        Log.d("JamaahViewModel", "Auth Check: UID=${user?.uid}, Email=${user?.email}, Name=${user?.displayName}")
-
-        user?.email?.let { email ->
-            loadJamaahByAgent(email)
-        } ?: run {
-            Log.e("JamaahViewModel", "Current user email is null")
-        }
     }
 
     fun loadJamaahByAgent(agentEmail: String) {

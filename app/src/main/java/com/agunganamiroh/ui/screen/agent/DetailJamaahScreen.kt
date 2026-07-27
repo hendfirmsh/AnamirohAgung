@@ -25,10 +25,11 @@ import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.input.OffsetMapping
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -495,7 +496,7 @@ private fun PaymentBottomSheet(
     onDismiss: () -> Unit,
     onConfirm: (Long, String, String) -> Unit
 ) {
-    var rawAmount by remember { mutableStateOf("") }
+    var amount by remember { mutableStateOf(TextFieldValue()) }
     var notes by remember { mutableStateOf("") }
     var selectedMethod by remember { mutableStateOf("Transfer") }
     val methods = listOf("Cash", "Transfer", "QRIS")
@@ -521,11 +522,12 @@ private fun PaymentBottomSheet(
             }
             
             OutlinedTextField(
-                value = rawAmount,
-                onValueChange = { rawAmount = it.filter { c -> c.isDigit() } },
+                value = amount,
+                onValueChange = { amount = it },
                 label = { Text("Nominal Pembayaran (IDR)") },
                 modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                visualTransformation = RupiahVisualTransformation,
                 shape = RoundedCornerShape(12.dp),
                 prefix = { Text("Rp ") },
                 colors = OutlinedTextFieldDefaults.colors(
@@ -570,13 +572,13 @@ private fun PaymentBottomSheet(
             
             Button(
                 onClick = { 
-                    val amt = rawAmount.toLongOrNull() ?: 0L
+                    val amt = amount.text.filter { it.isDigit() }.toLongOrNull() ?: 0L
                     if (amt > 0) onConfirm(amt, selectedMethod, notes) 
                 },
                 modifier = Modifier.fillMaxWidth().height(56.dp).bounceClick(),
                 shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                enabled = rawAmount.isNotEmpty() && !isLoading
+                enabled = amount.text.isNotEmpty() && !isLoading
             ) {
                 Text("KONFIRMASI PEMBAYARAN", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimary)
             }
@@ -675,7 +677,6 @@ private fun IslamicPatternOverlay() {
         }
     }
 }
-
 
 private val RupiahVisualTransformation = VisualTransformation { text ->
     val raw = text.text.filter { it.isDigit() }
