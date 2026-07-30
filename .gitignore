@@ -17,3 +17,6 @@ local.properties
 # Build output
 build_output.txt
 build_output2.txt
+
+# Codegraph local database
+.codegraph/
