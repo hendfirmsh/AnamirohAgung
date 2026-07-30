@@ -9,8 +9,14 @@ sealed class Screen(
     object AdminDashboard :
         Screen("admin_dashboard")
 
+    object AgentMain :
+        Screen("agent_main")
+
     object AgentDashboard :
         Screen("agent_dashboard")
+
+    object JamaahInput :
+        Screen("input_jamaah")
 
     object DataJamaah :
         Screen("data_jamaah")
@@ -60,5 +66,8 @@ sealed class Screen(
 
     object Laporan :
         Screen("laporan")
+
+    object Riwayat :
+        Screen("riwayat")
 
 }

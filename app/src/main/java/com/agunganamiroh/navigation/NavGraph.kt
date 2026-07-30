@@ -16,6 +16,7 @@ import com.agunganamiroh.motion.NavigationMotion
 import com.agunganamiroh.ui.screen.auth.LoginScreen
 import com.agunganamiroh.ui.screen.admin.AdminDashboardScreen
 import com.agunganamiroh.ui.screen.agent.AgentDashboardScreen
+import com.agunganamiroh.ui.screen.agent.AgentMainScaffold
 import com.agunganamiroh.ui.screen.account.AccountCenterScreen
 import com.agunganamiroh.ui.screen.notification.NotificationCenterScreen
 import com.agunganamiroh.ui.screen.agent.InputJamaahScreen
@@ -32,6 +33,7 @@ import com.agunganamiroh.ui.screen.keberangkatan.detail.DepartureDetailScreen
 import com.agunganamiroh.ui.screen.laporan.LaporanScreen
 import com.agunganamiroh.ui.screen.paket.PackageCatalogScreen
 import com.agunganamiroh.ui.screen.paket.PackageDetailScreen
+import com.agunganamiroh.ui.screen.riwayat.RiwayatScreen
 import androidx.navigation.navArgument
 import androidx.navigation.NavType
 
@@ -76,7 +78,7 @@ fun NavGraph() {
 
                         "agent" -> {
                             navController.navigate(
-                                "agent_dashboard"
+                                Screen.AgentMain.route
                             ) {
                                 popUpTo("login") {
                                     inclusive = true
@@ -86,6 +88,10 @@ fun NavGraph() {
                     }
                 }
             )
+        }
+
+        composable(route = Screen.AgentMain.route) {
+            AgentMainScaffold(navController = navController)
         }
 
         composable(
@@ -309,6 +315,16 @@ fun NavGraph() {
             popExitTransition = NavigationMotion.popExitTransition
         ) {
             NotificationCenterScreen(navController = navController)
+        }
+
+        composable(
+            route = "riwayat",
+            enterTransition = NavigationMotion.enterTransition,
+            exitTransition = NavigationMotion.exitTransition,
+            popEnterTransition = NavigationMotion.popEnterTransition,
+            popExitTransition = NavigationMotion.popExitTransition
+        ) {
+            RiwayatScreen(navController = navController)
         }
     }
     } // Box
