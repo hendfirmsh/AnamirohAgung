@@ -2,80 +2,72 @@ package com.agunganamiroh.data.repository
 
 import com.agunganamiroh.data.model.Activity
 import com.agunganamiroh.data.remote.FirebaseModule
+import com.google.firebase.Timestamp
+import com.google.firebase.firestore.Query
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 
 class ActivityRepository {
-
     private val firestore = FirebaseModule.firestore
-
-    suspend fun getActivities(): Result<List<Activity>> {
-
-        return try {
-
-            val currentUser = FirebaseModule.auth.currentUser
-            if (currentUser == null) {
-                return Result.success(emptyList())
-            }
-
-            val snapshot = firestore
-                .collection("users")
-                .document(currentUser.uid)
-                .collection("activities")
-                .orderBy("timestamp", com.google.firebase.firestore.Query.Direction.DESCENDING)
-                .limit(50)
-                .get()
-                .await()
-
-            val activities = snapshot.documents
-                .mapNotNull { it.toObject(Activity::class.java) }
-                .sortedByDescending { it.timestamp.seconds }
-
-            Result.success(activities)
-
-        } catch (e: Exception) {
-
-            Result.failure(e)
-
-        }
-    }
+    private val collection = firestore.collection("activity")
 
     suspend fun createActivity(activity: Activity): Result<Unit> {
         return try {
-            val currentUser = FirebaseModule.auth.currentUser
-                ?: return Result.failure(Exception("User not authenticated"))
+            val docRef = collection.document()
+            val activityWithId = activity.copy(
+                id = docRef.id,
+                activityId = docRef.id,
+                createdAt = activity.createdAt ?: Timestamp.now()
+            )
+            docRef.set(activityWithId).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 
-            val docRef = if (activity.id.isBlank()) {
-                firestore
-                    .collection("users")
-                    .document(currentUser.uid)
-                    .collection("activities")
-                    .document()
-            } else {
-                firestore
-                    .collection("users")
-                    .document(currentUser.uid)
-                    .collection("activities")
-                    .document(activity.id)
+    fun getRecentActivities(agentEmail: String, limit: Int = 20): Flow<Result<List<Activity>>> = callbackFlow {
+        var query = collection
+            .whereEqualTo("agentEmail", agentEmail)
+            .orderBy("createdAt", Query.Direction.DESCENDING)
+        if (limit > 0) {
+            query = query.limit(limit.toLong())
+        }
+        val subscription = query.addSnapshotListener { snapshot, error ->
+            if (error != null) {
+                trySend(Result.failure(error))
+                return@addSnapshotListener
             }
-
-            val data = activity.copy(id = docRef.id).let { act ->
-                mapOf(
-                    "id" to act.id,
-                    "type" to act.type.name,
-                    "title" to act.title,
-                    "subtitle" to act.subtitle,
-                    "description" to act.description,
-                    "jamaahId" to act.jamaahId,
-                    "jamaahName" to act.jamaahName,
-                    "paymentId" to act.paymentId,
-                    "invoiceId" to act.invoiceId,
-                    "amount" to act.amount,
-                    "status" to act.status,
-                    "timestamp" to com.google.firebase.Timestamp.now()
-                )
+            if (snapshot != null) {
+                val activities = snapshot.toObjects(Activity::class.java)
+                trySend(Result.success(activities))
             }
+        }
+        awaitClose { subscription.remove() }
+    }
 
-            docRef.set(data).await()
+    fun getActivityById(activityId: String): Flow<Result<Activity>> = callbackFlow {
+        val subscription = collection.document(activityId)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    trySend(Result.failure(error))
+                    return@addSnapshotListener
+                }
+                if (snapshot != null && snapshot.exists()) {
+                    val activity = snapshot.toObject(Activity::class.java)
+                    if (activity != null) {
+                        trySend(Result.success(activity))
+                    }
+                }
+            }
+        awaitClose { subscription.remove() }
+    }
+
+    suspend fun deleteActivity(activityId: String): Result<Unit> {
+        return try {
+            collection.document(activityId).delete().await()
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)

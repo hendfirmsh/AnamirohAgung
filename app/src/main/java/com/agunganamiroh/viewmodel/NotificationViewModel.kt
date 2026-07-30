@@ -55,14 +55,15 @@ class NotificationViewModel(application: Application) : AndroidViewModel(applica
 
     private fun observeNotifications() {
         activityJob?.cancel()
+        val email = auth.currentUser?.email ?: return
         activityJob = viewModelScope.launch {
             combine(
-                flow { emit(repository.getActivities()) },
+                repository.getRecentActivities(email),
                 readManager.readIds,
                 _filter,
                 _searchQuery
-            ) { activityResult, readIds, currentFilter, query ->
-                val activities = activityResult.getOrNull().orEmpty()
+            ) { result, readIds, currentFilter, query ->
+                val activities = result.getOrNull().orEmpty()
                 val notifications = activities.map { activity ->
                     notificationRepo.mapToNotification(activity, activity.id in readIds)
                 }
@@ -78,7 +79,7 @@ class NotificationViewModel(application: Application) : AndroidViewModel(applica
                         unreadCount = unread,
                         filter = currentFilter,
                         searchQuery = query,
-                        error = activityResult.exceptionOrNull()?.message
+                        error = result.exceptionOrNull()?.message
                     )
                 }
             }.launchIn(viewModelScope)

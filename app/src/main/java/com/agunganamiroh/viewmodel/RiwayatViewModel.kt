@@ -3,7 +3,6 @@ package com.agunganamiroh.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.agunganamiroh.data.model.Activity
-import com.agunganamiroh.data.model.ActivityType
 import com.agunganamiroh.data.repository.ActivityRepository
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.flow.*
@@ -63,14 +62,15 @@ class RiwayatViewModel : ViewModel() {
 
     private fun observeActivities() {
         activityJob?.cancel()
+        val email = auth.currentUser?.email ?: return
         activityJob = viewModelScope.launch {
             combine(
-                flow { emit(repository.getActivities()) },
+                repository.getRecentActivities(email),
                 _searchQuery,
                 _selectedFilter,
                 _selectedPeriod
-            ) { activityResult, query, filter, period ->
-                val activities = activityResult.getOrNull().orEmpty()
+            ) { result, query, filter, period ->
+                val activities = result.getOrNull().orEmpty()
                 val filtered = applyFilters(activities, filter, period, query)
                 val grouped = groupByDate(filtered)
 
@@ -82,7 +82,7 @@ class RiwayatViewModel : ViewModel() {
                         searchQuery = query,
                         selectedFilter = filter,
                         selectedPeriod = period,
-                        error = activityResult.exceptionOrNull()?.message
+                        error = result.exceptionOrNull()?.message
                     )
                 }
             }.launchIn(viewModelScope)
@@ -99,9 +99,9 @@ class RiwayatViewModel : ViewModel() {
 
         result = when (filter) {
             ActivityFilter.ALL -> result
-            ActivityFilter.JAMAAH -> result.filter { it.type == ActivityType.REGISTRATION || it.type == ActivityType.STATUS_UPDATE }
-            ActivityFilter.PAYMENT -> result.filter { it.type == ActivityType.PAYMENT }
-            ActivityFilter.INVOICE -> result.filter { it.type == ActivityType.INVOICE }
+            ActivityFilter.JAMAAH -> result.filter { it.type.startsWith("JAMAAH") || it.type == "STATUS_UPDATE" }
+            ActivityFilter.PAYMENT -> result.filter { it.type.startsWith("PAYMENT") }
+            ActivityFilter.INVOICE -> result.filter { it.type.startsWith("INVOICE") }
         }
 
         result = when (period) {
@@ -124,7 +124,7 @@ class RiwayatViewModel : ViewModel() {
                     }
                 }
                 result.filter { activity ->
-                    val date = activity.timestamp.toDate()
+                    val date = activity.createdAt?.toDate() ?: Date()
                     date.after(cutoff.time) || date == cutoff.time
                 }
             }
@@ -152,7 +152,7 @@ class RiwayatViewModel : ViewModel() {
 
         val grouped = activities.groupBy { activity ->
             val cal = Calendar.getInstance().apply {
-                time = activity.timestamp.toDate()
+                time = activity.createdAt?.toDate() ?: Date()
             }
 
             val activityDateStr = dateFormat.format(cal.time)

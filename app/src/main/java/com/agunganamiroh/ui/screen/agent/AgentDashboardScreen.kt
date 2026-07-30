@@ -59,7 +59,6 @@ import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import com.agunganamiroh.data.model.ActivityType
 import com.agunganamiroh.motion.*
 
 // ============================================================
@@ -218,7 +217,7 @@ fun AgentDashboardScreen(
                                 isRefreshing = true
                                 jamaahViewModel.loadJamaahByAgent(email)
                                 paketViewModel.observePakets()
-                                activityViewModel.loadActivities()
+                                activityViewModel.observeActivities()
                                 notificationViewModel.refresh()
                                 delay(300)
                                 isRefreshing = false
@@ -596,12 +595,13 @@ private fun ActivitySection(activities: List<com.agunganamiroh.data.model.Activi
 private fun ActivityItem(activity: com.agunganamiroh.data.model.Activity, isLast: Boolean) {
     Row(modifier = Modifier.fillMaxWidth()) {
         val color = when(activity.type) {
-            ActivityType.REGISTRATION -> MaterialTheme.colorScheme.primary
-            ActivityType.STATUS_UPDATE -> MaterialTheme.colorScheme.secondary
-            ActivityType.PAYMENT -> MaterialTheme.colorScheme.tertiary
-            ActivityType.INVOICE -> MaterialTheme.colorScheme.primary
-            ActivityType.PROFILE_UPDATE -> MaterialTheme.colorScheme.secondary
-            ActivityType.OTHER -> MaterialTheme.colorScheme.primary
+            "JAMAAH_CREATED" -> MaterialTheme.colorScheme.primary
+            "JAMAAH_UPDATED" -> MaterialTheme.colorScheme.secondary
+            "JAMAAH_DELETED" -> MaterialTheme.colorScheme.error
+            "PAYMENT_ADDED" -> MaterialTheme.colorScheme.tertiary
+            "PAYMENT_COMPLETED" -> MaterialTheme.colorScheme.tertiary
+            "INVOICE_CREATED" -> MaterialTheme.colorScheme.primary
+            else -> MaterialTheme.colorScheme.primary
         }
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Box(modifier = Modifier.size(12.dp).clip(CircleShape).background(color))
@@ -613,7 +613,7 @@ private fun ActivityItem(activity: com.agunganamiroh.data.model.Activity, isLast
         Column(modifier = Modifier.weight(1f)) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text(text = activity.title, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
-                Text(text = getRelativeTime(activity.timestamp.toDate().time), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f))
+                Text(text = getRelativeTime(activity.createdAt?.toDate()?.time ?: 0L), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f))
             }
             Text(text = activity.description, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(modifier = Modifier.height(16.dp))
