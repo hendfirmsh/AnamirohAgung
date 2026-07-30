@@ -4,12 +4,15 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.outlined.AddCircleOutline
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -24,15 +27,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
-import androidx.compose.ui.input.nestedscroll.NestedScrollSource
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.agunganamiroh.navigation.Screen
+import com.agunganamiroh.ui.screen.account.AccountCenterScreen
 
 private const val BAR_HIDE_THRESHOLD = 5f
 private const val BAR_ANIM_DURATION = 250
@@ -49,13 +49,13 @@ fun AgentMainScaffold(
             selectedIcon = Icons.Default.Home
         ),
         TabItem(
-            route = Screen.AgentHistory.route,
-            label = "Riwayat",
-            icon = Icons.Default.History,
-            selectedIcon = Icons.Default.History
+            route = Screen.JamaahInput.route,
+            label = "Tambah Jamaah",
+            icon = Icons.Outlined.AddCircleOutline,
+            selectedIcon = Icons.Outlined.AddCircleOutline
         ),
         TabItem(
-            route = Screen.AgentProfile.route,
+            route = Screen.AccountCenter.route,
             label = "Profil",
             icon = Icons.Default.Person,
             selectedIcon = Icons.Default.Person
@@ -66,23 +66,6 @@ fun AgentMainScaffold(
     var showBottomBar by remember { mutableStateOf(true) }
 
     val currentShowBottomBar by rememberUpdatedState(showBottomBar)
-
-    val nestedScrollConnection = remember {
-        object : NestedScrollConnection {
-            override fun onPreScroll(
-                available: Offset,
-                source: NestedScrollSource
-            ): Offset {
-                val delta = available.y
-                if (delta > BAR_HIDE_THRESHOLD && currentShowBottomBar) {
-                    showBottomBar = false
-                } else if (delta < -BAR_HIDE_THRESHOLD && !currentShowBottomBar) {
-                    showBottomBar = true
-                }
-                return Offset.Zero
-            }
-        }
-    }
 
     Scaffold(
         bottomBar = {
@@ -138,11 +121,17 @@ fun AgentMainScaffold(
         },
         containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
-        when (selectedTabIndex) {
-            0 -> AgentDashboardScreen(navController = navController, nestedScrollConnection = nestedScrollConnection)
-            1 -> AgentHistoryScreen(navController = navController, nestedScrollConnection = nestedScrollConnection)
-            2 -> AgentProfileScreen(navController = navController, nestedScrollConnection = nestedScrollConnection)
-            else -> AgentDashboardScreen(navController = navController, nestedScrollConnection = nestedScrollConnection)
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(bottom = innerPadding.calculateBottomPadding())
+        ) {
+            when (selectedTabIndex) {
+                0 -> AgentDashboardScreen(navController = navController)
+                1 -> InputJamaahScreen(navController = navController)
+                2 -> AccountCenterScreen(navController = navController)
+                else -> AgentDashboardScreen(navController = navController)
+            }
         }
     }
 }

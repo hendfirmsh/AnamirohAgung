@@ -397,7 +397,7 @@ fun InputJamaahScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(paddingValues),
-                    contentPadding = PaddingValues(bottom = 100.dp),
+                    contentPadding = PaddingValues(bottom = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(24.dp)
                 ) {
                     item { RegistrationHeader() }

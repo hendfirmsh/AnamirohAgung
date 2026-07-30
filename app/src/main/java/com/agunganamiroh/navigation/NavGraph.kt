@@ -4,17 +4,17 @@ import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.agunganamiroh.ui.screen.auth.LoginScreen
 import com.agunganamiroh.ui.screen.admin.AdminDashboardScreen
 import com.agunganamiroh.ui.screen.agent.AgentDashboardScreen
-import com.agunganamiroh.ui.screen.agent.AgentHistoryScreen
 import com.agunganamiroh.ui.screen.agent.AgentMainScaffold
-import com.agunganamiroh.ui.screen.agent.AgentProfileScreen
-import com.agunganamiroh.ui.screen.account.AccountCenterScreen
-import com.agunganamiroh.ui.screen.notification.NotificationCenterScreen
 import com.agunganamiroh.ui.screen.agent.InputJamaahScreen
 import com.agunganamiroh.ui.screen.agent.DataJamaahScreen
 import com.agunganamiroh.ui.screen.agent.DetailJamaahScreen
@@ -30,10 +30,8 @@ import com.agunganamiroh.ui.screen.laporan.LaporanScreen
 import com.agunganamiroh.ui.screen.riwayat.RiwayatScreen
 import com.agunganamiroh.ui.screen.paket.PackageCatalogScreen
 import com.agunganamiroh.ui.screen.paket.PackageDetailScreen
-import androidx.navigation.navArgument
-import androidx.navigation.NavType
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
+import com.agunganamiroh.ui.screen.account.AccountCenterScreen
+import com.agunganamiroh.ui.screen.notification.NotificationCenterScreen
 
 private const val DURATION = 300
 
@@ -97,6 +95,10 @@ fun NavGraph() {
             )
         }
 
+        composable(route = Screen.AgentMain.route) {
+            AgentMainScaffold(navController = navController)
+        }
+
         composable(
             route = "admin_dashboard",
 
@@ -104,12 +106,20 @@ fun NavGraph() {
             AdminDashboardScreen(navController = navController)
         }
 
-        composable(route = Screen.AgentMain.route) {
-            AgentMainScaffold(navController = navController)
+        composable(
+            route = "agent_dashboard",
+
+        ) {
+            AgentDashboardScreen(
+                navController = navController
+            )
         }
 
-        composable(route = "data_jamaah") {
-            DataJamaahScreen(
+        composable(
+            route = "account_center",
+
+        ) {
+            AccountCenterScreen(
                 navController = navController
             )
         }
@@ -131,6 +141,15 @@ fun NavGraph() {
 
         ) {
             InputJamaahScreen(
+                navController = navController
+            )
+        }
+
+        composable(
+            route = "data_jamaah",
+
+        ) {
+            DataJamaahScreen(
                 navController = navController
             )
         }

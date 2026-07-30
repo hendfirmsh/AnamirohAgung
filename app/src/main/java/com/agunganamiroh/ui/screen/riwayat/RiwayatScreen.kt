@@ -34,8 +34,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.agunganamiroh.data.model.Activity
 import com.agunganamiroh.data.model.ActivityType
+import com.agunganamiroh.motion.ShimmerBox
 import com.agunganamiroh.motion.animateEntrance
-import com.agunganamiroh.motion.staggerItem
 import com.agunganamiroh.viewmodel.ActivityFilter
 import com.agunganamiroh.viewmodel.PeriodFilter
 import com.agunganamiroh.viewmodel.RiwayatViewModel
@@ -272,7 +272,7 @@ private fun DateSectionHeader(label: String, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp,),
+            .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
@@ -561,18 +561,18 @@ private fun TimelineSkeleton(modifier: Modifier = Modifier) {
     ) {
         repeat(6) {
             Row(modifier = Modifier.fillMaxWidth()) {
-                com.agunganamiroh.motion.ShimmerBox(
+                ShimmerBox(
                     modifier = Modifier.size(28.dp),
                     shape = CircleShape
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 Column(modifier = Modifier.weight(1f)) {
-                    com.agunganamiroh.motion.ShimmerBox(
+                    ShimmerBox(
                         modifier = Modifier.fillMaxWidth(0.8f).height(14.dp),
                         shape = RoundedCornerShape(6.dp)
                     )
                     Spacer(modifier = Modifier.height(6.dp))
-                    com.agunganamiroh.motion.ShimmerBox(
+                    ShimmerBox(
                         modifier = Modifier.fillMaxWidth(0.5f).height(12.dp),
                         shape = RoundedCornerShape(6.dp)
                     )
