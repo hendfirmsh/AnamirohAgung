@@ -206,6 +206,7 @@ private fun JamaahList(
 
 @Composable
 internal fun JamaahCard(
+    index: Int = 0,
     jamaah: Jamaah,
     onClick: () -> Unit,
     onDelete: () -> Unit

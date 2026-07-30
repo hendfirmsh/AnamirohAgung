@@ -33,6 +33,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.agunganamiroh.data.model.Activity
+import com.agunganamiroh.data.model.ActivityType
 import com.agunganamiroh.motion.animateEntrance
 import com.agunganamiroh.motion.staggerItem
 import com.agunganamiroh.viewmodel.ActivityFilter
@@ -360,7 +361,7 @@ private fun TimelineItem(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = formatTimestamp(activity.createdAt?.toDate()?.time ?: 0L),
+                    text = formatTimestamp(activity.timestamp.toDate().time),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                 )
@@ -582,30 +583,26 @@ private fun TimelineSkeleton(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun getActivityVisual(type: String): ActivityVisual {
-    return when {
-        type.startsWith("JAMAAH_CREATED") -> ActivityVisual(
+private fun getActivityVisual(type: ActivityType): ActivityVisual {
+    return when (type) {
+        ActivityType.REGISTRATION -> ActivityVisual(
             Icons.Default.PersonAdd, MaterialTheme.colorScheme.primary
         )
-        type.startsWith("JAMAAH_UPDATED") -> ActivityVisual(
+        ActivityType.STATUS_UPDATE -> ActivityVisual(
             Icons.Default.Edit, MaterialTheme.colorScheme.primary
         )
-        type.startsWith("JAMAAH_DELETED") -> ActivityVisual(
-            Icons.Default.PersonRemove, MaterialTheme.colorScheme.error
-        )
-        type.startsWith("PAYMENT_ADDED") -> ActivityVisual(
+        ActivityType.PAYMENT -> ActivityVisual(
             Icons.Default.Payments, MaterialTheme.colorScheme.tertiary
         )
-        type.startsWith("PAYMENT_COMPLETED") -> ActivityVisual(
-            Icons.Default.CheckCircle, MaterialTheme.colorScheme.tertiary
-        )
-        type.startsWith("INVOICE_PUBLISHED") || type.startsWith("INVOICE_CREATED") -> ActivityVisual(
+        ActivityType.INVOICE -> ActivityVisual(
             Icons.Default.Receipt, MaterialTheme.colorScheme.primary
         )
-        type.startsWith("INVOICE_CANCELLED") -> ActivityVisual(
-            Icons.Default.Cancel, MaterialTheme.colorScheme.error
+        ActivityType.PROFILE_UPDATE -> ActivityVisual(
+            Icons.Default.Edit, MaterialTheme.colorScheme.secondary
         )
-        else -> ActivityVisual(Icons.Default.Info, MaterialTheme.colorScheme.onSurfaceVariant)
+        ActivityType.OTHER -> ActivityVisual(
+            Icons.Default.Info, MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }
 
@@ -616,25 +613,31 @@ private fun formatTimestamp(timeMillis: Long): String {
 }
 
 private fun formatSecondaryInfo(activity: Activity): String {
-    return when {
-        activity.type.startsWith("PAYMENT_") && activity.amount > 0 -> {
-            val fmt = NumberFormat.getCurrencyInstance(Locale("id", "ID")).apply {
-                maximumFractionDigits = 0
-            }
-            "+${fmt.format(activity.amount).replace(",00", "")}"
+    return when (activity.type) {
+        ActivityType.PAYMENT -> {
+            if (activity.amount > 0) {
+                val fmt = NumberFormat.getCurrencyInstance(Locale("id", "ID")).apply {
+                    maximumFractionDigits = 0
+                }
+                "+${fmt.format(activity.amount).replace(",00", "")}"
+            } else activity.description
         }
-        activity.description.length > 60 -> activity.description.take(60) + "..."
-        else -> activity.description
+        else -> if (activity.description.length > 60) activity.description.take(60) + "..."
+                else activity.description
     }
 }
 
 private fun navigateToDetail(navController: NavController, activity: Activity) {
     if (activity.jamaahId.isBlank()) return
-    when {
-        activity.type.startsWith("PAYMENT_") || activity.type.startsWith("JAMAAH_") ->
+    when (activity.type) {
+        ActivityType.PAYMENT, ActivityType.REGISTRATION, ActivityType.STATUS_UPDATE ->
             navController.navigate("detail_jamaah/${activity.jamaahId}")
-        activity.type.startsWith("INVOICE_") && activity.invoiceId.isNotBlank() ->
-            navController.navigate("agent_invoice_detail/${activity.invoiceId}")
+        ActivityType.INVOICE -> {
+            if (activity.invoiceId.isNotBlank())
+                navController.navigate("agent_invoice_detail/${activity.invoiceId}")
+            else
+                navController.navigate("detail_jamaah/${activity.jamaahId}")
+        }
         else ->
             navController.navigate("detail_jamaah/${activity.jamaahId}")
     }

@@ -7,6 +7,12 @@ data class Activity(
     val type: ActivityType = ActivityType.REGISTRATION,
     val title: String = "",
     val subtitle: String = "",
+    val description: String = "",
+    val jamaahId: String = "",
+    val jamaahName: String = "",
+    val paymentId: String = "",
+    val invoiceId: String = "",
+    val amount: Long = 0,
     val status: String = "pending",
     val timestamp: Timestamp = Timestamp.now()
 )
@@ -14,6 +20,7 @@ data class Activity(
 enum class ActivityType(val displayName: String) {
     REGISTRATION("Registrasi Jamaah"),
     PAYMENT("Pembayaran"),
+    INVOICE("Invoice"),
     STATUS_UPDATE("Update Status"),
     PROFILE_UPDATE("Update Profil"),
     OTHER("Lainnya")

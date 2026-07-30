@@ -3,6 +3,7 @@ package com.agunganamiroh.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.agunganamiroh.data.model.Activity
+import com.agunganamiroh.data.model.ActivityType
 import com.agunganamiroh.data.repository.ActivityRepository
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.flow.*
@@ -61,12 +62,10 @@ class RiwayatViewModel : ViewModel() {
     }
 
     private fun observeActivities() {
-        val email = auth.currentUser?.email ?: return
-
         activityJob?.cancel()
         activityJob = viewModelScope.launch {
             combine(
-                repository.getRecentActivities(email, limit = 0),
+                flow { emit(repository.getActivities()) },
                 _searchQuery,
                 _selectedFilter,
                 _selectedPeriod
@@ -100,9 +99,9 @@ class RiwayatViewModel : ViewModel() {
 
         result = when (filter) {
             ActivityFilter.ALL -> result
-            ActivityFilter.JAMAAH -> result.filter { it.type.startsWith("JAMAAH_") }
-            ActivityFilter.PAYMENT -> result.filter { it.type.startsWith("PAYMENT_") }
-            ActivityFilter.INVOICE -> result.filter { it.type.startsWith("INVOICE_") }
+            ActivityFilter.JAMAAH -> result.filter { it.type == ActivityType.REGISTRATION || it.type == ActivityType.STATUS_UPDATE }
+            ActivityFilter.PAYMENT -> result.filter { it.type == ActivityType.PAYMENT }
+            ActivityFilter.INVOICE -> result.filter { it.type == ActivityType.INVOICE }
         }
 
         result = when (period) {
@@ -125,9 +124,8 @@ class RiwayatViewModel : ViewModel() {
                     }
                 }
                 result.filter { activity ->
-                    activity.createdAt?.toDate()?.let { date ->
-                        date.after(cutoff.time) || date == cutoff.time
-                    } ?: false
+                    val date = activity.timestamp.toDate()
+                    date.after(cutoff.time) || date == cutoff.time
                 }
             }
         }
@@ -153,8 +151,9 @@ class RiwayatViewModel : ViewModel() {
         val todayStr = dateFormat.format(today.time)
 
         val grouped = activities.groupBy { activity ->
-            val cal = Calendar.getInstance()
-            activity.createdAt?.toDate()?.let { cal.time = it }
+            val cal = Calendar.getInstance().apply {
+                time = activity.timestamp.toDate()
+            }
 
             val activityDateStr = dateFormat.format(cal.time)
             when {

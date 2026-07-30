@@ -38,4 +38,47 @@ class ActivityRepository {
 
         }
     }
+
+    suspend fun createActivity(activity: Activity): Result<Unit> {
+        return try {
+            val currentUser = FirebaseModule.auth.currentUser
+                ?: return Result.failure(Exception("User not authenticated"))
+
+            val docRef = if (activity.id.isBlank()) {
+                firestore
+                    .collection("users")
+                    .document(currentUser.uid)
+                    .collection("activities")
+                    .document()
+            } else {
+                firestore
+                    .collection("users")
+                    .document(currentUser.uid)
+                    .collection("activities")
+                    .document(activity.id)
+            }
+
+            val data = activity.copy(id = docRef.id).let { act ->
+                mapOf(
+                    "id" to act.id,
+                    "type" to act.type.name,
+                    "title" to act.title,
+                    "subtitle" to act.subtitle,
+                    "description" to act.description,
+                    "jamaahId" to act.jamaahId,
+                    "jamaahName" to act.jamaahName,
+                    "paymentId" to act.paymentId,
+                    "invoiceId" to act.invoiceId,
+                    "amount" to act.amount,
+                    "status" to act.status,
+                    "timestamp" to com.google.firebase.Timestamp.now()
+                )
+            }
+
+            docRef.set(data).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }

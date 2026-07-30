@@ -53,9 +53,12 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import com.agunganamiroh.viewmodel.ActivityViewModel
 import com.agunganamiroh.viewmodel.AuthViewModel
 import com.agunganamiroh.viewmodel.JamaahViewModel
+import com.agunganamiroh.viewmodel.NotificationViewModel
 import com.agunganamiroh.viewmodel.PaketViewModel
+import com.agunganamiroh.data.model.ActivityType
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -121,6 +124,8 @@ fun AgentDashboardScreen(
     }
 
     var isRefreshing by remember { mutableStateOf(false) }
+    var selectedPaketForDetail by remember { mutableStateOf<com.agunganamiroh.data.model.Paket?>(null) }
+    var showPaketSheet by remember { mutableStateOf(false) }
     val refreshScope = rememberCoroutineScope()
     val pullRefreshState = rememberPullToRefreshState()
 
@@ -249,12 +254,7 @@ fun AgentDashboardScreen(
                             )
                         }
 
-                    item {
-                        ActivitySection(
-                            activities = jamaahState.activities,
-                            isLoading = jamaahState.loading
-                        )
-                    }
+
                 }
             }
         }
@@ -539,13 +539,12 @@ private fun ActivitySection(activities: List<com.agunganamiroh.data.model.Activi
 private fun ActivityItem(activity: com.agunganamiroh.data.model.Activity, isLast: Boolean) {
     Row(modifier = Modifier.fillMaxWidth()) {
         val color = when(activity.type) {
-            "JAMAAH_CREATED" -> MaterialTheme.colorScheme.primary
-            "JAMAAH_UPDATED" -> MaterialTheme.colorScheme.secondary
-            "JAMAAH_DELETED" -> MaterialTheme.colorScheme.error
-            "PAYMENT_ADDED" -> MaterialTheme.colorScheme.tertiary
-            "PAYMENT_COMPLETED" -> MaterialTheme.colorScheme.tertiary
-            "INVOICE_CREATED" -> MaterialTheme.colorScheme.primary
-            else -> MaterialTheme.colorScheme.primary
+            ActivityType.REGISTRATION -> MaterialTheme.colorScheme.primary
+            ActivityType.STATUS_UPDATE -> MaterialTheme.colorScheme.secondary
+            ActivityType.PAYMENT -> MaterialTheme.colorScheme.tertiary
+            ActivityType.INVOICE -> MaterialTheme.colorScheme.primary
+            ActivityType.PROFILE_UPDATE -> MaterialTheme.colorScheme.secondary
+            ActivityType.OTHER -> MaterialTheme.colorScheme.primary
         }
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Box(modifier = Modifier.size(12.dp).clip(CircleShape).background(color))
@@ -557,7 +556,7 @@ private fun ActivityItem(activity: com.agunganamiroh.data.model.Activity, isLast
         Column(modifier = Modifier.weight(1f)) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text(text = activity.title, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
-                Text(text = getRelativeTime(activity.createdAt?.toDate()?.time ?: 0L), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f))
+                Text(text = getRelativeTime(activity.timestamp.toDate().time), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f))
             }
             Text(text = activity.description, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(modifier = Modifier.height(16.dp))

@@ -35,6 +35,7 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
 
     private val _state = MutableStateFlow(AccountCenterState())
     val state: StateFlow<AccountCenterState> = _state.asStateFlow()
+    val uiState: StateFlow<AccountCenterState> = state
 
     val notificationPrefs = notificationManager.notificationPrefs
 

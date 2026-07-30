@@ -54,19 +54,17 @@ class NotificationViewModel(application: Application) : AndroidViewModel(applica
     }
 
     private fun observeNotifications() {
-        val email = auth.currentUser?.email ?: return
-
         activityJob?.cancel()
         activityJob = viewModelScope.launch {
             combine(
-                repository.getRecentActivities(email, limit = 0),
+                flow { emit(repository.getActivities()) },
                 readManager.readIds,
                 _filter,
                 _searchQuery
             ) { activityResult, readIds, currentFilter, query ->
                 val activities = activityResult.getOrNull().orEmpty()
                 val notifications = activities.map { activity ->
-                    notificationRepo.mapToNotification(activity, activity.activityId in readIds)
+                    notificationRepo.mapToNotification(activity, activity.id in readIds)
                 }
 
                 val filtered = applyFilter(notifications, currentFilter, query)

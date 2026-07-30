@@ -64,14 +64,4 @@ sealed class Screen(
 
     object Laporan :
         Screen("laporan")
-
-    object AgentMain :
-        Screen("agent_main")
-
-    object AgentHistory :
-        Screen("agent_history")
-
-    object AgentProfile :
-        Screen("agent_profile")
-
 }

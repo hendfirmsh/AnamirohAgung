@@ -3,6 +3,7 @@ package com.agunganamiroh.navigation
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -27,8 +28,12 @@ import com.agunganamiroh.ui.screen.keberangkatan.KeberangkatanScreen
 import com.agunganamiroh.ui.screen.keberangkatan.detail.DepartureDetailScreen
 import com.agunganamiroh.ui.screen.laporan.LaporanScreen
 import com.agunganamiroh.ui.screen.riwayat.RiwayatScreen
+import com.agunganamiroh.ui.screen.paket.PackageCatalogScreen
+import com.agunganamiroh.ui.screen.paket.PackageDetailScreen
 import androidx.navigation.navArgument
 import androidx.navigation.NavType
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 private const val DURATION = 300
 
@@ -60,18 +65,8 @@ fun NavGraph() {
             )
         }
     ) {
-        NavHost(
-            navController = navController,
-            startDestination = "login"
-        ) {
 
-        composable(
-            route = "login",
-            enterTransition = NavigationMotion.enterTransition,
-            exitTransition = NavigationMotion.exitTransition,
-            popEnterTransition = NavigationMotion.popEnterTransition,
-            popExitTransition = NavigationMotion.popExitTransition
-        ) {
+        composable(route = "login") {
 
             LoginScreen(
                 onLoginSuccess = { role ->
@@ -104,10 +99,7 @@ fun NavGraph() {
 
         composable(
             route = "admin_dashboard",
-            enterTransition = NavigationMotion.enterTransition,
-            exitTransition = NavigationMotion.exitTransition,
-            popEnterTransition = NavigationMotion.popEnterTransition,
-            popExitTransition = NavigationMotion.popExitTransition
+
         ) {
             AdminDashboardScreen(navController = navController)
         }
@@ -136,10 +128,7 @@ fun NavGraph() {
                     defaultValue = null
                 }
             ),
-            enterTransition = NavigationMotion.enterTransition,
-            exitTransition = NavigationMotion.exitTransition,
-            popEnterTransition = NavigationMotion.popEnterTransition,
-            popExitTransition = NavigationMotion.popExitTransition
+
         ) {
             InputJamaahScreen(
                 navController = navController
@@ -149,10 +138,7 @@ fun NavGraph() {
         composable(
             route = "detail_jamaah/{id}",
             arguments = listOf(navArgument("id") { type = NavType.StringType }),
-            enterTransition = NavigationMotion.enterTransition,
-            exitTransition = NavigationMotion.exitTransition,
-            popEnterTransition = NavigationMotion.popEnterTransition,
-            popExitTransition = NavigationMotion.popExitTransition
+
         ) { backStackEntry ->
             val id = backStackEntry.arguments?.getString("id") ?: ""
             DetailJamaahScreen(
@@ -163,10 +149,7 @@ fun NavGraph() {
 
         composable(
             route = "pembayaran",
-            enterTransition = NavigationMotion.enterTransition,
-            exitTransition = NavigationMotion.exitTransition,
-            popEnterTransition = NavigationMotion.popEnterTransition,
-            popExitTransition = NavigationMotion.popExitTransition
+
         ) {
             PaymentScreen(navController = navController)
         }
@@ -174,10 +157,7 @@ fun NavGraph() {
         composable(
             route = "payment_detail/{id}",
             arguments = listOf(navArgument("id") { type = NavType.StringType }),
-            enterTransition = NavigationMotion.enterTransition,
-            exitTransition = NavigationMotion.exitTransition,
-            popEnterTransition = NavigationMotion.popEnterTransition,
-            popExitTransition = NavigationMotion.popExitTransition
+
         ) { backStackEntry ->
             val id = backStackEntry.arguments?.getString("id") ?: ""
             PaymentDetailScreen(navController = navController, jamaahId = id)
@@ -185,10 +165,7 @@ fun NavGraph() {
 
         composable(
             route = "agent_invoice_list",
-            enterTransition = NavigationMotion.enterTransition,
-            exitTransition = NavigationMotion.exitTransition,
-            popEnterTransition = NavigationMotion.popEnterTransition,
-            popExitTransition = NavigationMotion.popExitTransition
+
         ) {
             AgentInvoiceListScreen(navController = navController)
         }
@@ -196,10 +173,7 @@ fun NavGraph() {
         composable(
             route = "agent_invoice_detail/{id}",
             arguments = listOf(navArgument("id") { type = NavType.StringType }),
-            enterTransition = NavigationMotion.enterTransition,
-            exitTransition = NavigationMotion.exitTransition,
-            popEnterTransition = NavigationMotion.popEnterTransition,
-            popExitTransition = NavigationMotion.popExitTransition
+
         ) { backStackEntry ->
             val id = backStackEntry.arguments?.getString("id") ?: ""
             AgentInvoiceDetailScreen(navController = navController, invoiceId = id)
@@ -207,10 +181,7 @@ fun NavGraph() {
 
         composable(
             route = "admin_invoice_list",
-            enterTransition = NavigationMotion.enterTransition,
-            exitTransition = NavigationMotion.exitTransition,
-            popEnterTransition = NavigationMotion.popEnterTransition,
-            popExitTransition = NavigationMotion.popExitTransition
+
         ) {
             AdminInvoiceListScreen(navController = navController)
         }
@@ -218,10 +189,7 @@ fun NavGraph() {
         composable(
             route = "admin_create_invoice/{id}",
             arguments = listOf(navArgument("id") { type = NavType.StringType }),
-            enterTransition = NavigationMotion.enterTransition,
-            exitTransition = NavigationMotion.exitTransition,
-            popEnterTransition = NavigationMotion.popEnterTransition,
-            popExitTransition = NavigationMotion.popExitTransition
+
         ) { backStackEntry ->
             val id = backStackEntry.arguments?.getString("id") ?: ""
             AdminCreateInvoiceScreen(navController = navController, jamaahId = id)
@@ -229,10 +197,7 @@ fun NavGraph() {
 
         composable(
             route = "package_catalog",
-            enterTransition = NavigationMotion.enterTransition,
-            exitTransition = NavigationMotion.exitTransition,
-            popEnterTransition = NavigationMotion.popEnterTransition,
-            popExitTransition = NavigationMotion.popExitTransition
+
         ) {
             PackageCatalogScreen(navController = navController)
         }
@@ -240,20 +205,14 @@ fun NavGraph() {
         composable(
             route = "package_detail/{paketId}",
             arguments = listOf(navArgument("paketId") { type = NavType.StringType }),
-            enterTransition = NavigationMotion.enterTransition,
-            exitTransition = NavigationMotion.exitTransition,
-            popEnterTransition = NavigationMotion.popEnterTransition,
-            popExitTransition = NavigationMotion.popExitTransition
+
         ) {
             PackageDetailScreen(navController = navController)
         }
 
         composable(
             route = "keberangkatan",
-            enterTransition = NavigationMotion.enterTransition,
-            exitTransition = NavigationMotion.exitTransition,
-            popEnterTransition = NavigationMotion.popEnterTransition,
-            popExitTransition = NavigationMotion.popExitTransition
+
         ) {
             KeberangkatanScreen(navController = navController)
         }
@@ -261,10 +220,7 @@ fun NavGraph() {
         composable(
             route = "departure_detail/{paketId}",
             arguments = listOf(navArgument("paketId") { type = NavType.StringType }),
-            enterTransition = NavigationMotion.enterTransition,
-            exitTransition = NavigationMotion.exitTransition,
-            popEnterTransition = NavigationMotion.popEnterTransition,
-            popExitTransition = NavigationMotion.popExitTransition
+
         ) { backStackEntry ->
             val paketId = backStackEntry.arguments?.getString("paketId") ?: ""
             DepartureDetailScreen(
@@ -275,10 +231,7 @@ fun NavGraph() {
 
         composable(
             route = "laporan",
-            enterTransition = NavigationMotion.enterTransition,
-            exitTransition = NavigationMotion.exitTransition,
-            popEnterTransition = NavigationMotion.popEnterTransition,
-            popExitTransition = NavigationMotion.popExitTransition
+
         ) {
             val authViewModel: com.agunganamiroh.viewmodel.AuthViewModel = viewModel()
             val authState by authViewModel.uiState.collectAsStateWithLifecycle()
@@ -291,20 +244,14 @@ fun NavGraph() {
 
         composable(
             route = "riwayat",
-            enterTransition = NavigationMotion.enterTransition,
-            exitTransition = NavigationMotion.exitTransition,
-            popEnterTransition = NavigationMotion.popEnterTransition,
-            popExitTransition = NavigationMotion.popExitTransition
+
         ) {
             RiwayatScreen(navController = navController)
         }
 
         composable(
             route = "notification_center",
-            enterTransition = NavigationMotion.enterTransition,
-            exitTransition = NavigationMotion.exitTransition,
-            popEnterTransition = NavigationMotion.popEnterTransition,
-            popExitTransition = NavigationMotion.popExitTransition
+
         ) {
             NotificationCenterScreen(navController = navController)
         }
